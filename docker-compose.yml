@@ -1,0 +1,25 @@
+version: '3.8'
+
+services:
+  telegram-bot:
+    # Build the image from the Dockerfile in the current directory
+    build: .
+    # Name the container for easier identification
+    container_name: my_telegram_bot
+    # Automatically read environment variables from a .env file
+    env_file:
+      - .env
+    # Restart policy to ensure the bot stays online
+    restart: unless-stopped
+    # Logging configuration to prevent disk space issues
+    logging:
+      driver: "json-file"
+      options:
+        # Maximum size of a single log file
+        max-size: "10m"
+        # Number of log files to keep
+        max-file: "5"
+    # Mount the database file as a volume to persist data
+    # This ensures your SQLite database is not lost when the container is recreated.
+    volumes:
+      - ./bot.db:/app/bot.db
