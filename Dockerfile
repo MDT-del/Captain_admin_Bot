@@ -15,6 +15,9 @@ RUN pip install --no-cache-dir --trusted-host pypi.python.org -r requirements.tx
 # Copy the rest of the application's code into the container at /app
 COPY . .
 
+# Create an empty database file so that the volume mount doesn't create a directory
+RUN touch /app/bot.db
+
 # Define the command to run your app
 # This will execute 'python bot.py' when the container starts
 CMD ["python", "bot.py"]
