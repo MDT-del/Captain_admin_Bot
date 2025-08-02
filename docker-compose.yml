@@ -17,6 +17,10 @@ services:
         max-size: "10m"
         # Number of log files to keep
         max-file: "5"
+    # Add custom DNS servers to resolve potential network issues on the host
+    dns:
+      - 8.8.8.8
+      - 8.8.4.4
     # Mount the database file as a volume to persist data
     # This ensures your SQLite database is not lost when the container is recreated.
     volumes:
