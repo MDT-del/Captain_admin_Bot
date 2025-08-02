@@ -2,6 +2,7 @@ from aiogram.fsm.state import State, StatesGroup
 
 class Form(StatesGroup):
     """
-    A states group for the conversation form to set the footer.
+    A states group for various conversation forms.
     """
-    waiting_for_footer = State()  # The state for waiting for the user to send their footer text.
+    waiting_for_footer = State()
+    waiting_for_channel_forward = State()
