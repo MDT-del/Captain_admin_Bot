@@ -3,10 +3,12 @@ import logging
 
 from aiogram import Bot, Dispatcher
 from aiogram.fsm.storage.memory import MemoryStorage
+from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BOT_TOKEN
 import database
 from handlers import general, footer, channels, broadcasting
+from utils.scheduler import send_scheduled_post
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -14,12 +16,17 @@ logging.basicConfig(level=logging.INFO)
 
 async def main():
     """
-    The main function which initializes the bot, dispatcher, routers, and starts polling.
+    The main function which initializes the bot, dispatcher, scheduler, routers, and starts polling.
     """
     # Initialize bot, storage and dispatcher
     storage = MemoryStorage()
     bot = Bot(token=BOT_TOKEN, parse_mode="HTML")
-    dp = Dispatcher(storage=storage)
+
+    # Initialize the scheduler
+    scheduler = AsyncIOScheduler(timezone="Asia/Tehran")
+
+    # Pass scheduler to the dispatcher so it's available in handlers
+    dp = Dispatcher(storage=storage, scheduler=scheduler)
 
     # Include routers from handler modules
     dp.include_router(general.router)
@@ -30,8 +37,10 @@ async def main():
     # Initialize the database
     await database.init_db()
 
+    # Start the scheduler
+    scheduler.start()
+
     # Start polling
-    # Before starting, we drop pending updates to not process updates that were sent when the bot was offline.
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot)
 

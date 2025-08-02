@@ -42,6 +42,7 @@ def get_post_action_keyboard(lang: str) -> InlineKeyboardMarkup:
     builder = InlineKeyboardBuilder()
     builder.row(
         InlineKeyboardButton(text=get_text('send_now_button', lang), callback_data="send_now"),
+        InlineKeyboardButton(text=get_text('send_scheduled_button', lang), callback_data="send_scheduled")
     )
     builder.row(InlineKeyboardButton(text=get_text('cancel_broadcast_button', lang), callback_data="cancel_broadcast"))
     return builder.as_markup()

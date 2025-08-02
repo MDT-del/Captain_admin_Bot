@@ -13,3 +13,7 @@ class Form(StatesGroup):
     # Broadcasting states
     selecting_channels = State()
     waiting_for_caption = State()
+
+    # Scheduling states
+    selecting_schedule_date = State()
+    selecting_schedule_time = State()
