@@ -45,7 +45,7 @@ async def add_or_update_user(user_id: int, language_code: str):
         if await cursor.fetchone():
             await db.execute('UPDATE users SET language_code = ? WHERE user_id = ?', (language_code, user_id))
         else:
-            await db.execute('INSERT INTO users (user_id, language_code) VALUES (?, ?)', (user_id,))
+            await db.execute('INSERT INTO users (user_id, language_code) VALUES (?, ?)', (user_id, language_code))
         await db.commit()
 
 async def set_footer_text(user_id: int, footer_text: str):

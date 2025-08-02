@@ -1,12 +1,12 @@
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMarkup, KeyboardButton
-from aiogram.utils.keyboard import InlineKeyboardBuilder
+from aiogram.types import InlineKeyboardButton, ReplyKeyboardMarkup, KeyboardButton
+from aiogram.utils.keyboard import InlineKeyboardBuilder, ReplyKeyboardBuilder
 from typing import List, Dict
 
 from texts import get_text
 
 # --- General Keyboards ---
 
-def get_language_keyboard() -> InlineKeyboardMarkup:
+def get_language_keyboard() -> InlineKeyboardBuilder:
     """Creates an inline keyboard for language selection."""
     builder = InlineKeyboardBuilder()
     builder.row(
@@ -17,14 +17,10 @@ def get_language_keyboard() -> InlineKeyboardMarkup:
 
 def get_main_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
     """Creates a reply keyboard for the main menu."""
-    builder = ReplyKeyboardMarkup(
-        keyboard=[
-            [KeyboardButton(text=get_text('set_footer_button', lang))],
-            [KeyboardButton(text=get_text('manage_channels_button', lang))]
-        ],
-        resize_keyboard=True
-    )
-    return builder
+    builder = ReplyKeyboardBuilder()
+    builder.row(KeyboardButton(text=get_text('set_footer_button', lang)))
+    builder.row(KeyboardButton(text=get_text('manage_channels_button', lang)))
+    return builder.as_markup(resize_keyboard=True)
 
 # --- Channel Management Keyboards ---
 
