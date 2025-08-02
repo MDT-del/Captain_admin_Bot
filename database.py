@@ -2,7 +2,7 @@ import aiosqlite
 import logging
 from typing import List, Tuple, Optional
 
-DB_NAME = 'bot.db'
+DB_NAME = 'data/bot.db'
 
 async def init_db():
     """Initializes the database and creates tables if they don't exist."""

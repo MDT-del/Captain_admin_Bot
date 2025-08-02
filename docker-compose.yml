@@ -21,7 +21,6 @@ services:
     dns:
       - 8.8.8.8
       - 8.8.4.4
-    # Mount the database file as a volume to persist data
-    # This ensures your SQLite database is not lost when the container is recreated.
+    # Mount a data directory as a volume to persist the SQLite database.
     volumes:
-      - ./bot.db:/app/bot.db
+      - ./data:/app/data
