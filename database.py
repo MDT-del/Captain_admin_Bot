@@ -52,6 +52,13 @@ async def get_user_language(user_id: int) -> str | None:
         row = await cursor.fetchone()
         return row[0] if row else None
 
+async def get_user_footer(user_id: int) -> str | None:
+    """Retrieves the footer text for a specific user."""
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute('SELECT footer_text FROM users WHERE user_id = ?', (user_id,))
+        row = await cursor.fetchone()
+        return row[0] if row else None
+
 async def is_channel_registered(channel_id: int, user_id: int) -> bool:
     """Checks if a channel is already registered by a specific user."""
     async with aiosqlite.connect(DB_NAME) as db:

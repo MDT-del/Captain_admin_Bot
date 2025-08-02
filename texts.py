@@ -59,12 +59,12 @@ TEXTS = {
         'en': "⚠️ This channel is already registered by you."
     },
     'error_not_admin_in_channel': {
-        'fa': "❌ شما در این کانال ادمین نیستید. لطفا ابتدا در کانال ادمین شوید.",
-        'en': "❌ You are not an admin in this channel. Please become an admin first."
+        'fa': "❌ شما در این کانال ادمین نیستید.",
+        'en': "❌ You are not an admin in this channel."
     },
     'error_bot_not_admin': {
-        'fa': "❌ ربات در این کانال ادمین نیست. لطفا ابتدا ربات را در کانال ادمین کنید.",
-        'en': "❌ The bot is not an admin in this channel. Please make the bot an admin first."
+        'fa': "❌ ربات در این کانال ادمین نیست.",
+        'en': "❌ The bot is not an admin in this channel."
     },
     'error_generic': {
         'fa': "خطایی رخ داد. لطفا دوباره تلاش کنید.",
@@ -77,6 +77,38 @@ TEXTS = {
     'your_channels_list': {
         'fa': "لیست کانال‌های ثبت شده شما:",
         'en': "Your registered channels:"
+    },
+    # Broadcasting
+    'error_no_channels_for_broadcast': {
+        'fa': "شما باید ابتدا حداقل یک کانال را از منوی 'مدیریت کانال‌ها' ثبت کنید.",
+        'en': "You must first register at least one channel from the 'Manage Channels' menu."
+    },
+    'post_action_menu_title': {
+        'fa': "محتوای شما دریافت شد. چه کاری می‌خواهید انجام دهید؟",
+        'en': "Your content has been received. What would you like to do?"
+    },
+    'send_now_button': { 'fa': "ارسال فوری 🚀", 'en': "Send Now 🚀" },
+    'send_scheduled_button': { 'fa': "ارسال زمان‌بندی شده 🕒", 'en': "Scheduled Send 🕒" },
+    'cancel_broadcast_button': { 'fa': "لغو عملیات ❌", 'en': "Cancel ❌" },
+    'operation_cancelled': { 'fa': "عملیات لغو شد.", 'en': "Operation cancelled." },
+    'select_channels_prompt': {
+        'fa': "لطفا کانال یا کانال‌های مقصد را انتخاب کنید:",
+        'en': "Please select the destination channel(s):"
+    },
+    'confirm_channels_button': { 'fa': "تایید و ادامه ✅", 'en': "Confirm & Continue ✅" },
+    'ask_for_caption_prompt': {
+        'fa': "آیا می‌خواهید برای این پست کپشن اضافه کنید؟",
+        'en': "Do you want to add a caption to this post?"
+    },
+    'add_caption_yes_button': { 'fa': "بله، افزودن کپشن", 'en': "Yes, add caption" },
+    'add_caption_no_button': { 'fa': "خیر، ارسال بدون کپشن", 'en': "No, send without caption" },
+    'prompt_for_caption': {
+        'fa': "لطفا متن کپشن را ارسال کنید:",
+        'en': "Please send the caption text:"
+    },
+    'broadcast_success': {
+        'fa': "✅ پست شما با موفقیت به {count} کانال ارسال شد.",
+        'en': "✅ Your post was successfully sent to {count} channels."
     }
 }
 

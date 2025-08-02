@@ -6,7 +6,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import BOT_TOKEN
 import database
-from handlers import general, footer, channels
+from handlers import general, footer, channels, broadcasting
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -25,6 +25,7 @@ async def main():
     dp.include_router(general.router)
     dp.include_router(footer.router)
     dp.include_router(channels.router)
+    dp.include_router(broadcasting.router)
 
     # Initialize the database
     await database.init_db()
