@@ -3,4 +3,4 @@ python-dotenv==1.0.0
 aiosqlite==0.19.0
 apscheduler==3.10.4
 jdatetime==2.0.0
-aiogram-calendar==0.2.2
+aiogram-calendar==0.6.0
