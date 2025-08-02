@@ -5,7 +5,7 @@ services:
     # Build the image from the Dockerfile in the current directory
     build: .
     # Name the container for easier identification
-    container_name: my_telegram_bot
+    container_name: captain_bot
     # Automatically read environment variables from a .env file
     env_file:
       - .env
