@@ -99,7 +99,8 @@ async def remove_premium_command(message: types.Message):
         # Set premium to 0 and clear premium_until
         await database.set_user_premium(target_user_id, None)
         # Also update is_premium to 0
-        async with database.aiosqlite.connect(database.DB_NAME) as db:
+        import aiosqlite
+        async with aiosqlite.connect(database.DB_NAME) as db:
             await db.execute('UPDATE users SET is_premium = 0 WHERE user_id = ?', (target_user_id,))
             await db.commit()
             
@@ -124,7 +125,8 @@ async def remove_premium_command(message: types.Message):
 async def show_stats_command(message: types.Message):
     """Developer command to show bot statistics."""
     try:
-        async with database.aiosqlite.connect(database.DB_NAME) as db:
+        import aiosqlite
+        async with aiosqlite.connect(database.DB_NAME) as db:
             # Total users
             cursor = await db.execute('SELECT COUNT(*) FROM users')
             total_users = (await cursor.fetchone())[0]
