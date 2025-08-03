@@ -21,6 +21,12 @@ router = Router()
 async def content_entry_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
+    
+    # Check if user is in the middle of another process
+    current_state = await state.get_state()
+    if current_state:
+        # User is in the middle of another process, ignore this message
+        return
 
     # Check if user has registered channels
     if not await database.get_user_channels(user_id):
@@ -182,7 +188,9 @@ async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContex
 @router.message(Form.waiting_for_caption, F.text)
 async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
     await state.update_data(caption=message.text)
-    await message.answer("کپشن دریافت شد. در حال پردازش...")
+    lang = await database.get_user_language(message.from_user.id) or 'en'
+    processing_msg = "کپشن دریافت شد. در حال پردازش..." if lang == 'fa' else "Caption received. Processing..."
+    await message.answer(processing_msg)
     await send_final_post(message.from_user.id, state, bot, scheduler)
 
 # --- 5. Final Sending/Scheduling Logic ---
@@ -190,6 +198,9 @@ async def process_caption_handler(message: types.Message, state: FSMContext, bot
 async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
     data = await state.get_data()
     lang = await database.get_user_language(user_id) or 'en'
+    
+    # Debug log
+    logging.info(f"send_final_post called for user {user_id}, data: {data}")
 
     is_scheduled = data.get('is_scheduled', False)
     post_message_id = data['post_message_id']

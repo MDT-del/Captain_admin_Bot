@@ -1,5 +1,5 @@
 import jdatetime
-from aiogram.types import InlineKeyboardMarkup
+from aiogram.types import InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
 
 # --- Constants for Calendar ---
@@ -32,11 +32,11 @@ async def create_persian_calendar(year: int = None, month: int = None) -> Inline
 
     # Month and Year header
     builder.row(
-        builder.button(text=f"{MONTHS[month-1]} {year}", callback_data=IGNORE_CALLBACK)
+        InlineKeyboardButton(text=f"{MONTHS[month-1]} {year}", callback_data=IGNORE_CALLBACK)
     )
 
     # Days of the week header
-    row = [builder.button(text=day, callback_data=IGNORE_CALLBACK) for day in DAYS_OF_WEEK]
+    row = [InlineKeyboardButton(text=day, callback_data=IGNORE_CALLBACK) for day in DAYS_OF_WEEK]
     builder.row(*row)
 
     # Calendar days
@@ -44,12 +44,12 @@ async def create_persian_calendar(year: int = None, month: int = None) -> Inline
     days_in_month = jdatetime.date(year, month, 1).daysinmonth
 
     # Add empty buttons for the first week's offset
-    calendar_days = [builder.button(text=" ", callback_data=IGNORE_CALLBACK)] * month_start_day
+    calendar_days = [InlineKeyboardButton(text=" ", callback_data=IGNORE_CALLBACK)] * month_start_day
 
     # Add day buttons
     for day in range(1, days_in_month + 1):
         calendar_days.append(
-            builder.button(text=str(day), callback_data=f"{DAY_CALLBACK}_{year}_{month}_{day}")
+            InlineKeyboardButton(text=str(day), callback_data=f"{DAY_CALLBACK}_{year}_{month}_{day}")
         )
 
     # Reshape the list of buttons into a 7-column grid
@@ -63,8 +63,8 @@ async def create_persian_calendar(year: int = None, month: int = None) -> Inline
     next_year = year if month < 12 else year + 1
 
     builder.row(
-        builder.button(text="<", callback_data=f"{PREV_MONTH_CALLBACK}_{prev_year}_{prev_month}"),
-        builder.button(text=">", callback_data=f"{NEXT_MONTH_CALLBACK}_{next_year}_{next_month}")
+        InlineKeyboardButton(text="<", callback_data=f"{PREV_MONTH_CALLBACK}_{prev_year}_{prev_month}"),
+        InlineKeyboardButton(text=">", callback_data=f"{NEXT_MONTH_CALLBACK}_{next_year}_{next_month}")
     )
 
     return builder.as_markup()
