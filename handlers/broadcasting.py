@@ -22,8 +22,16 @@ async def content_entry_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
 
+    # Check if user has registered channels
     if not await database.get_user_channels(user_id):
         await message.answer(get_text('error_no_channels_for_broadcast', lang))
+        return
+
+    # Check post limit for non-premium users
+    can_send, remaining = await database.can_user_send_post(user_id)
+    if not can_send:
+        from config import FREE_USER_POST_LIMIT
+        await message.answer(get_text('post_limit_reached', lang).format(limit=FREE_USER_POST_LIMIT))
         return
 
     await state.set_data({
@@ -217,6 +225,11 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
                 sent_count += 1
             except Exception as e:
                 logging.error(f"Failed to send to channel {channel_id}: {e}")
+        
+        # Increment user's post count for successful sends
+        if sent_count > 0:
+            await database.increment_user_post_count(user_id)
+            
         await bot.send_message(user_id, get_text('broadcast_success', lang).format(count=sent_count))
 
     await state.clear()

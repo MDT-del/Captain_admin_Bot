@@ -37,6 +37,10 @@ async def send_scheduled_post(job_id: str, bot: Bot):
             caption=final_caption if final_caption else None,
             parse_mode="HTML"
         )
+        
+        # Increment user's post count for scheduled posts too
+        await database.increment_user_post_count(user_id)
+        
         logging.info(f"Successfully sent scheduled post from job {job_id} to channel {target_channel_id}")
 
     except Exception as e:

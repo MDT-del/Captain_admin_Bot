@@ -20,6 +20,7 @@ def get_main_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
     builder = ReplyKeyboardBuilder()
     builder.row(KeyboardButton(text=get_text('set_footer_button', lang)))
     builder.row(KeyboardButton(text=get_text('manage_channels_button', lang)))
+    builder.row(KeyboardButton(text=get_text('upgrade_premium_button', lang)))
     return builder.as_markup(resize_keyboard=True)
 
 # --- Channel Management Keyboards ---
@@ -65,5 +66,23 @@ def get_caption_choice_keyboard(lang: str) -> InlineKeyboardMarkup:
     )
     builder.row(
         InlineKeyboardButton(text=get_text('add_caption_no_button', lang), callback_data="add_caption_no")
+    )
+    return builder.as_markup()
+
+def get_channel_detail_keyboard(lang: str, channel_id: int) -> InlineKeyboardMarkup:
+    """Keyboard for channel details with remove option."""
+    builder = InlineKeyboardBuilder()
+    builder.row(InlineKeyboardButton(text=get_text('remove_channel_button', lang), 
+                                   callback_data=f"remove_channel_{channel_id}"))
+    return builder.as_markup()
+
+def get_confirm_remove_keyboard(lang: str, channel_id: int) -> InlineKeyboardMarkup:
+    """Keyboard to confirm channel removal."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text=get_text('yes_remove', lang), 
+                           callback_data=f"confirm_remove_{channel_id}"),
+        InlineKeyboardButton(text=get_text('no_cancel', lang), 
+                           callback_data="cancel_remove")
     )
     return builder.as_markup()

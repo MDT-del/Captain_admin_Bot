@@ -8,6 +8,14 @@ TEXTS = {
         'fa': "شما زبان فارسی را انتخاب کردید. به منوی اصلی خوش آمدید!",
         'en': "You have selected English. Welcome to the main menu!"
     },
+    'main_menu': {
+        'fa': "منوی اصلی:",
+        'en': "Main Menu:"
+    },
+    'set_footer_button': {
+        'fa': "تنظیم فوتر 📝",
+        'en': "Set Footer 📝"
+    },
     # ... (previous texts are assumed to be here) ...
     'manage_channels_button': {
         'fa': "مدیریت کانال‌ها 📢",
@@ -78,6 +86,81 @@ TEXTS = {
     'schedule_success': {
         'fa': "✅ پست شما برای ارسال در تاریخ {date} ساعت {time} با موفقیت زمان‌بندی شد.",
         'en': "✅ Your post was successfully scheduled for {date} at {time}."
+    },
+    # Channel management
+    'add_channel_prompt': {
+        'fa': "لطفا ربات را به کانال مورد نظر اضافه کرده و ادمین کنید، سپس یک پیام از آن کانال فوروارد کنید:",
+        'en': "Please add the bot to your channel and make it admin, then forward a message from that channel:"
+    },
+    'channel_added_success': {
+        'fa': "✅ کانال با موفقیت اضافه شد!",
+        'en': "✅ Channel added successfully!"
+    },
+    'channel_already_exists': {
+        'fa': "❌ این کانال قبلاً ثبت شده است.",
+        'en': "❌ This channel is already registered."
+    },
+    'channel_add_error': {
+        'fa': "❌ خطا در افزودن کانال. لطفا مطمئن شوید که ربات ادمین کانال است.",
+        'en': "❌ Error adding channel. Please make sure the bot is admin of the channel."
+    },
+    'no_channels_registered': {
+        'fa': "شما هیچ کانالی ثبت نکرده‌اید.",
+        'en': "You haven't registered any channels."
+    },
+    'remove_channel_button': {
+        'fa': "🗑️ حذف کانال",
+        'en': "🗑️ Remove Channel"
+    },
+    'channel_removed_success': {
+        'fa': "✅ کانال با موفقیت حذف شد.",
+        'en': "✅ Channel removed successfully."
+    },
+    'confirm_remove_channel': {
+        'fa': "آیا مطمئن هستید که می‌خواهید این کانال را حذف کنید؟\n\n📢 {channel_title}",
+        'en': "Are you sure you want to remove this channel?\n\n📢 {channel_title}"
+    },
+    'yes_remove': {
+        'fa': "✅ بله، حذف کن",
+        'en': "✅ Yes, Remove"
+    },
+    'no_cancel': {
+        'fa': "❌ خیر، لغو",
+        'en': "❌ No, Cancel"
+    },
+    # Premium system
+    'upgrade_premium_button': {
+        'fa': "💎 ارتقا به پریمیوم",
+        'en': "💎 Upgrade to Premium"
+    },
+    'premium_info': {
+        'fa': "💎 اطلاعات پریمیوم\n\n🆓 کاربران رایگان: محدود به {limit} پست در ماه\n💎 کاربران پریمیوم: ارسال نامحدود\n\n📊 شما این ماه {used} پست ارسال کرده‌اید.\n⏳ باقی‌مانده: {remaining} پست",
+        'en': "💎 Premium Information\n\n🆓 Free users: Limited to {limit} posts per month\n💎 Premium users: Unlimited sending\n\n📊 You have sent {used} posts this month.\n⏳ Remaining: {remaining} posts"
+    },
+    'premium_info_unlimited': {
+        'fa': "💎 شما کاربر پریمیوم هستید!\n\n✨ ارسال نامحدود پست\n📊 این ماه {used} پست ارسال کرده‌اید.",
+        'en': "💎 You are a premium user!\n\n✨ Unlimited post sending\n📊 You have sent {used} posts this month."
+    },
+    'contact_developer': {
+        'fa': "برای ارتقا به پریمیوم، با توسعه‌دهنده تماس بگیرید:",
+        'en': "To upgrade to premium, contact the developer:"
+    },
+    'post_limit_reached': {
+        'fa': "❌ شما به حد مجاز ارسال پست رسیده‌اید!\n\n🆓 کاربران رایگان: {limit} پست در ماه\n💎 برای ارسال نامحدود، به پریمیوم ارتقا دهید.",
+        'en': "❌ You have reached your post limit!\n\n🆓 Free users: {limit} posts per month\n💎 Upgrade to premium for unlimited sending."
+    },
+    # Error messages
+    'error_occurred': {
+        'fa': "❌ خطایی رخ داد. لطفا دوباره تلاش کنید.",
+        'en': "❌ An error occurred. Please try again."
+    },
+    'invalid_message_type': {
+        'fa': "❌ نوع پیام نامعتبر است. لطفا پیام معتبری از کانال فوروارد کنید.",
+        'en': "❌ Invalid message type. Please forward a valid message from the channel."
+    },
+    'choose_language_button': {
+        'fa': "🇮🇷 فارسی",
+        'en': "🇺🇸 English"
     }
 }
 

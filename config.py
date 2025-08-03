@@ -13,6 +13,8 @@ BOT_TOKEN = os.getenv("BOT_TOKEN")
 if not BOT_TOKEN:
     raise ValueError("BOT_TOKEN is not set in the environment variables or .env file.")
 
-# You can add other configurations here in the future
-# For example:
-# ADMIN_ID = os.getenv("ADMIN_ID")
+# Developer ID for special privileges
+DEVELOPER_ID = int(os.getenv("DEVELOPER_ID", "0"))
+
+# Premium system settings
+FREE_USER_POST_LIMIT = 10  # Posts per month for free users
