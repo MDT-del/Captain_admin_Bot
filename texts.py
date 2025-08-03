@@ -161,6 +161,32 @@ TEXTS = {
     'choose_language_button': {
         'fa': "🇮🇷 فارسی",
         'en': "🇺🇸 English"
+    },
+    # Footer management
+    'prompt_for_footer': {
+        'fa': "لطفا متن فوتر جدید را ارسال کنید:",
+        'en': "Please send the new footer text:"
+    },
+    'footer_set_success': {
+        'fa': "✅ فوتر با موفقیت تنظیم شد!",
+        'en': "✅ Footer set successfully!"
+    },
+    # Developer menu
+    'developer_menu': {
+        'fa': "🔧 منوی توسعه‌دهنده\n\nشما به عنوان توسعه‌دهنده وارد شده‌اید.",
+        'en': "🔧 Developer Menu\n\nYou are logged in as developer."
+    },
+    'developer_stats_button': {
+        'fa': "📊 آمار و گزارشات",
+        'en': "📊 Statistics & Reports"
+    },
+    'developer_manage_users_button': {
+        'fa': "👥 مدیریت کاربران",
+        'en': "👥 Manage Users"
+    },
+    'developer_premium_management_button': {
+        'fa': "💎 مدیریت پریمیوم",
+        'en': "💎 Premium Management"
     }
 }
 

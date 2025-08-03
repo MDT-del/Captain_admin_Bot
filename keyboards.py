@@ -23,6 +23,16 @@ def get_main_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
     builder.row(KeyboardButton(text=get_text('upgrade_premium_button', lang)))
     return builder.as_markup(resize_keyboard=True)
 
+def get_developer_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
+    """Creates a reply keyboard for the developer menu."""
+    builder = ReplyKeyboardBuilder()
+    builder.row(KeyboardButton(text=get_text('developer_stats_button', lang)))
+    builder.row(KeyboardButton(text=get_text('developer_manage_users_button', lang)))
+    builder.row(KeyboardButton(text=get_text('developer_premium_management_button', lang)))
+    builder.row(KeyboardButton(text=get_text('set_footer_button', lang)))
+    builder.row(KeyboardButton(text=get_text('manage_channels_button', lang)))
+    return builder.as_markup(resize_keyboard=True)
+
 # --- Channel Management Keyboards ---
 
 def get_channels_menu_keyboard(lang: str) -> InlineKeyboardMarkup:

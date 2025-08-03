@@ -4,7 +4,8 @@ from aiogram.fsm.context import FSMContext
 import database
 from texts import get_text
 from states import Form
-from keyboards import get_main_menu_keyboard
+from keyboards import get_main_menu_keyboard, get_developer_menu_keyboard
+from config import DEVELOPER_ID
 
 # All handlers for this module are registered on a separate router
 router = Router()
@@ -27,4 +28,8 @@ async def process_footer_text(message: types.Message, state: FSMContext):
     await database.set_footer_text(user_id, message.text)
     await state.clear()
 
-    await message.answer(get_text('footer_set_success', lang), reply_markup=get_main_menu_keyboard(lang))
+    # Show appropriate menu based on user type
+    if user_id == DEVELOPER_ID:
+        await message.answer(get_text('footer_set_success', lang), reply_markup=get_developer_menu_keyboard(lang))
+    else:
+        await message.answer(get_text('footer_set_success', lang), reply_markup=get_main_menu_keyboard(lang))

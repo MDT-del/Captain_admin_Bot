@@ -3,7 +3,8 @@ from aiogram.filters import CommandStart, Command
 
 import database
 from texts import get_text
-from keyboards import get_language_keyboard, get_main_menu_keyboard
+from keyboards import get_language_keyboard, get_main_menu_keyboard, get_developer_menu_keyboard
+from config import DEVELOPER_ID
 
 # All handlers for this module are registered on a separate router
 router = Router()
@@ -20,8 +21,13 @@ async def send_welcome(message: types.Message):
 @router.message(Command("menu"))
 async def show_menu(message: types.Message):
     """Handler for the /menu command. Shows the main menu."""
-    lang = await database.get_user_language(message.from_user.id) or 'en'
-    await message.answer(get_text('main_menu', lang), reply_markup=get_main_menu_keyboard(lang))
+    user_id = message.from_user.id
+    lang = await database.get_user_language(user_id) or 'en'
+    
+    if user_id == DEVELOPER_ID:
+        await message.answer(get_text('developer_menu', lang), reply_markup=get_developer_menu_keyboard(lang))
+    else:
+        await message.answer(get_text('main_menu', lang), reply_markup=get_main_menu_keyboard(lang))
 
 @router.callback_query(F.data.startswith("lang_"))
 async def process_language_selection(callback: types.CallbackQuery):
@@ -33,4 +39,9 @@ async def process_language_selection(callback: types.CallbackQuery):
 
     await callback.answer()
     await callback.message.edit_text(get_text('lang_selected', lang))
-    await callback.message.answer(get_text('main_menu', lang), reply_markup=get_main_menu_keyboard(lang))
+    
+    # Show appropriate menu based on user type
+    if user_id == DEVELOPER_ID:
+        await callback.message.answer(get_text('developer_menu', lang), reply_markup=get_developer_menu_keyboard(lang))
+    else:
+        await callback.message.answer(get_text('main_menu', lang), reply_markup=get_main_menu_keyboard(lang))

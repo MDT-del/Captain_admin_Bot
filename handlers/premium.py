@@ -121,6 +121,15 @@ async def remove_premium_command(message: types.Message):
         await message.answer(f"Error: {e}")
 
 
+@router.message(F.text.in_([get_text('developer_stats_button', 'fa'), get_text('developer_stats_button', 'en')]))
+async def show_stats_menu(message: types.Message):
+    """Shows bot statistics for developer."""
+    user_id = message.from_user.id
+    if user_id != DEVELOPER_ID:
+        return
+        
+    await show_stats_command(message)
+
 @router.message(F.from_user.id == DEVELOPER_ID, F.text.startswith("/stats"))
 async def show_stats_command(message: types.Message):
     """Developer command to show bot statistics."""
@@ -162,4 +171,89 @@ async def show_stats_command(message: types.Message):
         
     except Exception as e:
         logging.error(f"Error showing stats: {e}")
+        await message.answer(f"Error: {e}")
+
+
+@router.message(F.text.in_([get_text('developer_manage_users_button', 'fa'), get_text('developer_manage_users_button', 'en')]))
+async def show_user_management_menu(message: types.Message):
+    """Shows user management options for developer."""
+    user_id = message.from_user.id
+    if user_id != DEVELOPER_ID:
+        return
+        
+    lang = await database.get_user_language(user_id) or 'en'
+    
+    help_text = """🔧 دستورات مدیریت کاربران:
+
+/setpremium USER_ID [DAYS] - تنظیم پریمیوم
+مثال: /setpremium 123456789 30
+
+/removepremium USER_ID - حذف پریمیوم
+مثال: /removepremium 123456789
+
+/userinfo USER_ID - اطلاعات کاربر
+مثال: /userinfo 123456789""" if lang == 'fa' else """🔧 User Management Commands:
+
+/setpremium USER_ID [DAYS] - Set premium
+Example: /setpremium 123456789 30
+
+/removepremium USER_ID - Remove premium
+Example: /removepremium 123456789
+
+/userinfo USER_ID - User information
+Example: /userinfo 123456789"""
+
+    await message.answer(help_text)
+
+
+@router.message(F.from_user.id == DEVELOPER_ID, F.text.startswith("/userinfo"))
+async def show_user_info(message: types.Message):
+    """Shows information about a specific user."""
+    try:
+        parts = message.text.split()
+        if len(parts) < 2:
+            await message.answer("Usage: /userinfo USER_ID")
+            return
+            
+        target_user_id = int(parts[1])
+        
+        import aiosqlite
+        async with aiosqlite.connect(database.DB_NAME) as db:
+            # Get user info
+            cursor = await db.execute('''
+                SELECT u.user_id, u.language_code, u.is_premium, u.premium_until, u.created_at,
+                       s.posts_sent_this_month, s.total_posts_sent
+                FROM users u
+                LEFT JOIN user_stats s ON u.user_id = s.user_id
+                WHERE u.user_id = ?
+            ''', (target_user_id,))
+            user_data = await cursor.fetchone()
+            
+            if not user_data:
+                await message.answer(f"❌ User {target_user_id} not found.")
+                return
+                
+            # Get user channels count
+            cursor = await db.execute('SELECT COUNT(*) FROM channels WHERE user_id = ?', (target_user_id,))
+            channels_count = (await cursor.fetchone())[0]
+            
+        user_id, lang_code, is_premium, premium_until, created_at, posts_month, total_posts = user_data
+        
+        info_text = f"""👤 User Information:
+
+🆔 User ID: {user_id}
+🌐 Language: {lang_code or 'Not set'}
+💎 Premium: {'Yes' if is_premium else 'No'}
+📅 Premium Until: {premium_until or 'N/A'}
+📊 Posts This Month: {posts_month or 0}
+📈 Total Posts: {total_posts or 0}
+📢 Channels: {channels_count}
+🗓️ Joined: {created_at or 'Unknown'}"""
+
+        await message.answer(info_text)
+        
+    except (ValueError, IndexError):
+        await message.answer("Invalid format. Usage: /userinfo USER_ID")
+    except Exception as e:
+        logging.error(f"Error showing user info: {e}")
         await message.answer(f"Error: {e}")
