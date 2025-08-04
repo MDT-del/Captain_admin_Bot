@@ -15,7 +15,20 @@ from utils.persian_calendar import create_persian_calendar, CALENDAR_CALLBACK_PR
 
 router = Router()
 
-# --- 1. Content Entry Point ---
+# --- 1. Caption Handler (Must be before content handler!) ---
+
+@router.message(Form.waiting_for_caption, F.text)
+async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
+    current_state = await state.get_state()
+    logging.info(f"🎯 Caption handler called for user {message.from_user.id}, state: {current_state}, text: {message.text}")
+    await state.update_data(caption=message.text)
+    lang = await database.get_user_language(message.from_user.id) or 'en'
+    processing_msg = "کپشن دریافت شد. در حال پردازش..." if lang == 'fa' else "Caption received. Processing..."
+    await message.answer(processing_msg)
+    logging.info(f"🚀 About to call send_final_post for user {message.from_user.id}")
+    await send_final_post(message.from_user.id, state, bot, scheduler)
+
+# --- 2. Content Entry Point ---
 
 @router.message(F.content_type.in_({'text', 'photo', 'video', 'document', 'audio', 'voice'}))
 async def content_entry_handler(message: types.Message, state: FSMContext):
@@ -198,17 +211,6 @@ async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContex
         logging.info(f"No caption selected, sending immediately for user {callback.from_user.id}")
         await callback.message.edit_text("در حال پردازش...")
         await send_final_post(callback.from_user.id, state, bot, scheduler)
-
-@router.message(Form.waiting_for_caption, F.text)
-async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
-    current_state = await state.get_state()
-    logging.info(f"🎯 Caption handler called for user {message.from_user.id}, state: {current_state}, text: {message.text}")
-    await state.update_data(caption=message.text)
-    lang = await database.get_user_language(message.from_user.id) or 'en'
-    processing_msg = "کپشن دریافت شد. در حال پردازش..." if lang == 'fa' else "Caption received. Processing..."
-    await message.answer(processing_msg)
-    logging.info(f"🚀 About to call send_final_post for user {message.from_user.id}")
-    await send_final_post(message.from_user.id, state, bot, scheduler)
 
 # --- 5. Final Sending/Scheduling Logic ---
 
