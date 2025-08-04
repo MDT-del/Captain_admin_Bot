@@ -18,23 +18,12 @@ async def send_scheduled_post(job_id: str, bot: Bot):
     _, user_id, post_chat_id, post_message_id, target_channel_id, caption, _ = post_data
 
     try:
-        # Construct the final caption with footer
-        footer = await database.get_user_footer(user_id)
-        final_caption = ""
-        if caption:
-            final_caption += caption
-        if footer:
-            if final_caption:
-                final_caption += f"\n\n{footer}"
-            else:
-                final_caption = footer
-
-        # Send the post
+        # Send the post with the caption that already includes footer (if any)
         await bot.copy_message(
             chat_id=target_channel_id,
             from_chat_id=post_chat_id,
             message_id=post_message_id,
-            caption=final_caption if final_caption else None,
+            caption=caption if caption else None,
             parse_mode="HTML"
         )
         
