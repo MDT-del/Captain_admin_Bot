@@ -15,7 +15,7 @@ from utils.persian_calendar import create_persian_calendar, CALENDAR_CALLBACK_PR
 
 router = Router()
 
-# --- 1. Caption Handler (Must be before content handler!) ---
+# --- 1. State-specific handlers (Must be before content handler!) ---
 
 @router.message(Form.waiting_for_caption, F.text)
 async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
@@ -27,6 +27,48 @@ async def process_caption_handler(message: types.Message, state: FSMContext, bot
     await message.answer(processing_msg)
     logging.info(f"🚀 About to call send_final_post for user {message.from_user.id}")
     await send_final_post(message.from_user.id, state, bot, scheduler)
+
+@router.message(Form.selecting_schedule_time, F.text)
+async def process_schedule_time(message: types.Message, state: FSMContext, bot: Bot):
+    lang = await database.get_user_language(message.from_user.id) or 'en'
+    logging.info(f"⏰ Time handler called for user {message.from_user.id}, text: {message.text}")
+    try:
+        hour, minute = map(int, message.text.split(':'))
+        data = await state.get_data()
+        jalali_date = jdatetime.datetime.strptime(data['scheduled_date'], '%Y-%m-%d').date()
+
+        tehran_tz = timezone('Asia/Tehran')
+        local_dt = tehran_tz.localize(datetime.datetime(
+            year=jalali_date.togregorian().year,
+            month=jalali_date.togregorian().month,
+            day=jalali_date.togregorian().day,
+            hour=hour,
+            minute=minute
+        ))
+        utc_dt = local_dt.astimezone(datetime.timezone.utc)
+
+        if utc_dt < datetime.datetime.now(datetime.timezone.utc):
+             await message.answer("زمان انتخاب شده در گذشته است. لطفا زمان دیگری انتخاب کنید.")
+             return
+
+        await state.update_data(scheduled_datetime_utc=utc_dt)
+        await state.set_state(None)
+
+        # Re-trigger the channel selection process now that time is set
+        channels = await database.get_user_channels(message.from_user.id)
+        if not channels:
+            await message.answer(get_text('no_channels', lang))
+            await state.clear()
+            return
+
+        await state.update_data(all_channels=channels, selected_channels=[], is_scheduled=True)
+        await state.set_state(Form.selecting_channels)
+        await message.answer(get_text('select_channels', lang), reply_markup=get_channel_selection_keyboard(lang, channels, []))
+    except ValueError:
+        await message.answer("فرمت ساعت نادرست است. لطفا به صورت HH:MM وارد کنید (مثال: 14:30)")
+    except Exception as e:
+        logging.error(f"Error processing schedule time: {e}")
+        await message.answer("خطا در پردازش زمان. لطفا دوباره تلاش کنید.")
 
 # --- 2. Content Entry Point ---
 
@@ -122,41 +164,7 @@ async def calendar_process(callback: types.CallbackQuery, state: FSMContext):
         )
         await callback.answer()
 
-# --- 4. Time, Channel, and Caption Handlers ---
-
-@router.message(Form.selecting_schedule_time, F.text)
-async def process_schedule_time(message: types.Message, state: FSMContext, bot: Bot):
-    lang = await database.get_user_language(message.from_user.id) or 'en'
-    try:
-        hour, minute = map(int, message.text.split(':'))
-        data = await state.get_data()
-        jalali_date = jdatetime.datetime.strptime(data['scheduled_date'], '%Y-%m-%d').date()
-
-        tehran_tz = timezone('Asia/Tehran')
-        local_dt = tehran_tz.localize(datetime.datetime(
-            year=jalali_date.togregorian().year,
-            month=jalali_date.togregorian().month,
-            day=jalali_date.togregorian().day,
-            hour=hour,
-            minute=minute
-        ))
-        utc_dt = local_dt.astimezone(datetime.timezone.utc)
-
-        if utc_dt < datetime.datetime.now(datetime.timezone.utc):
-             await message.answer("زمان انتخاب شده در گذشته است. لطفا زمان دیگری انتخاب کنید.")
-             return
-
-        await state.update_data(scheduled_datetime_utc=utc_dt)
-        await state.set_state(None)
-
-        # Re-trigger the channel selection process now that time is set
-        # We create a mock callback object to reuse the handler
-        mock_callback = types.CallbackQuery(id="mock", from_user=message.from_user, chat_instance="", message=message)
-        await start_channel_selection(mock_callback, state, bot)
-        await message.delete() # clean up the time message
-
-    except (ValueError, IndexError):
-        await message.answer(get_text('error_invalid_time_format', lang))
+# --- 4. Channel and Caption Handlers ---
 
 async def start_channel_selection(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
     # This function is now a reusable entry point for channel selection
