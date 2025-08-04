@@ -17,18 +17,12 @@ router = Router()
 
 # --- 1. Content Entry Point ---
 
-@router.message(F.content_type.in_({'text', 'photo', 'video', 'document', 'audio', 'voice'}))
+@router.message(F.content_type.in_({'text', 'photo', 'video', 'document', 'audio', 'voice'}), ~F.state)
 async def content_entry_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
     
-    # Check if user is in the middle of another process
-    current_state = await state.get_state()
-    logging.info(f"Content received from user {user_id}, current state: {current_state}")
-    if current_state:
-        # User is in the middle of another process, ignore this message
-        logging.info(f"Ignoring content from user {user_id} due to active state: {current_state}")
-        return
+    logging.info(f"Content received from user {user_id} for broadcasting")
     
 
 
