@@ -185,7 +185,8 @@ async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContex
 
 @router.message(Form.waiting_for_caption, F.text)
 async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
-    logging.info(f"Caption received from user {message.from_user.id}: {message.text}")
+    current_state = await state.get_state()
+    logging.info(f"Caption handler called for user {message.from_user.id}, state: {current_state}, text: {message.text}")
     await state.update_data(caption=message.text)
     lang = await database.get_user_language(message.from_user.id) or 'en'
     processing_msg = "کپشن دریافت شد. در حال پردازش..." if lang == 'fa' else "Caption received. Processing..."
@@ -196,11 +197,15 @@ async def process_caption_handler(message: types.Message, state: FSMContext, bot
 # --- 5. Final Sending/Scheduling Logic ---
 
 async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
-    data = await state.get_data()
-    lang = await database.get_user_language(user_id) or 'en'
-    
-    # Debug log
-    logging.info(f"send_final_post called for user {user_id}, data: {data}")
+    try:
+        data = await state.get_data()
+        lang = await database.get_user_language(user_id) or 'en'
+        
+        # Debug log
+        logging.info(f"send_final_post called for user {user_id}, data: {data}")
+    except Exception as e:
+        logging.error(f"Error in send_final_post for user {user_id}: {e}")
+        return
 
     is_scheduled = data.get('is_scheduled', False)
     post_message_id = data['post_message_id']
@@ -229,11 +234,14 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
         await bot.send_message(user_id, get_text('schedule_success', lang).format(
             date=jalali_time.strftime('%Y/%m/%d'), time=jalali_time.strftime('%H:%M')))
     else:
+        logging.info(f"Starting immediate broadcast for user {user_id} to {len(target_channels)} channels")
         sent_count = 0
         for channel_id in target_channels:
             try:
+                logging.info(f"Sending to channel {channel_id}")
                 await bot.copy_message(chat_id=channel_id, from_chat_id=post_chat_id, message_id=post_message_id, caption=final_caption or None, parse_mode="HTML")
                 sent_count += 1
+                logging.info(f"Successfully sent to channel {channel_id}")
             except Exception as e:
                 logging.error(f"Failed to send to channel {channel_id}: {e}")
         
@@ -241,6 +249,7 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
         if sent_count > 0:
             await database.increment_user_post_count(user_id)
             
+        logging.info(f"Broadcast completed. Sent to {sent_count} channels")
         await bot.send_message(user_id, get_text('broadcast_success', lang).format(count=sent_count))
 
     await state.clear()
