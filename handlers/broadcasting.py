@@ -24,8 +24,10 @@ async def content_entry_handler(message: types.Message, state: FSMContext):
     
     # Check if user is in the middle of another process
     current_state = await state.get_state()
+    logging.info(f"Content received from user {user_id}, current state: {current_state}")
     if current_state:
         # User is in the middle of another process, ignore this message
+        logging.info(f"Ignoring content from user {user_id} due to active state: {current_state}")
         return
 
     # Check if user has registered channels
@@ -187,10 +189,12 @@ async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContex
 
 @router.message(Form.waiting_for_caption, F.text)
 async def process_caption_handler(message: types.Message, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
+    logging.info(f"Caption received from user {message.from_user.id}: {message.text}")
     await state.update_data(caption=message.text)
     lang = await database.get_user_language(message.from_user.id) or 'en'
     processing_msg = "کپشن دریافت شد. در حال پردازش..." if lang == 'fa' else "Caption received. Processing..."
     await message.answer(processing_msg)
+    logging.info(f"About to call send_final_post for user {message.from_user.id}")
     await send_final_post(message.from_user.id, state, bot, scheduler)
 
 # --- 5. Final Sending/Scheduling Logic ---
@@ -244,3 +248,9 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
         await bot.send_message(user_id, get_text('broadcast_success', lang).format(count=sent_count))
 
     await state.clear()
+
+# Debug handler to catch all unhandled messages
+@router.message()
+async def debug_handler(message: types.Message, state: FSMContext):
+    current_state = await state.get_state()
+    logging.info(f"Unhandled message from user {message.from_user.id}, state: {current_state}, content_type: {message.content_type}, text: {message.text[:50] if message.text else 'N/A'}")
