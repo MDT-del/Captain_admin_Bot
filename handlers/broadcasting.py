@@ -12,6 +12,7 @@ from texts import get_text
 from states import Form
 from keyboards import get_post_action_keyboard, get_channel_selection_keyboard, get_caption_choice_keyboard
 from utils.persian_calendar import create_persian_calendar, CALENDAR_CALLBACK_PREFIX, PREV_MONTH_CALLBACK, NEXT_MONTH_CALLBACK, DAY_CALLBACK
+from utils.scheduler import send_scheduled_post
 
 router = Router()
 
@@ -262,7 +263,7 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
         for channel_id in target_channels:
             job_id = str(uuid.uuid4())
             scheduler.add_job(
-                "utils.scheduler.send_scheduled_post",
+                send_scheduled_post,
                 trigger='date',
                 run_date=scheduled_time_utc,
                 args=[job_id, bot],
