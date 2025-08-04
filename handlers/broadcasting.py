@@ -56,14 +56,29 @@ async def process_schedule_time(message: types.Message, state: FSMContext, bot: 
 
         # Re-trigger the channel selection process now that time is set
         channels = await database.get_user_channels(message.from_user.id)
+        logging.info(f"Retrieved channels for user {message.from_user.id}: {channels}")
+        
         if not channels:
             await message.answer(get_text('no_channels', lang))
             await state.clear()
             return
 
-        await state.update_data(all_channels=channels, selected_channels=[], is_scheduled=True)
+        # Convert channels to proper format
+        all_channels_info = []
+        for channel in channels:
+            try:
+                if isinstance(channel, tuple):
+                    channel_id = channel[0]
+                else:
+                    channel_id = channel
+                chat = await bot.get_chat(channel_id)
+                all_channels_info.append({'id': channel_id, 'title': chat.title})
+            except Exception as e:
+                logging.error(f"Error getting chat info for channel {channel}: {e}")
+
+        await state.update_data(all_channels=all_channels_info, selected_channels=[], is_scheduled=True)
         await state.set_state(Form.selecting_channels)
-        await message.answer(get_text('select_channels', lang), reply_markup=get_channel_selection_keyboard(lang, channels, []))
+        await message.answer(get_text('select_channels_prompt', lang), reply_markup=get_channel_selection_keyboard(lang, all_channels_info, []))
     except ValueError:
         await message.answer("فرمت ساعت نادرست است. لطفا به صورت HH:MM وارد کنید (مثال: 14:30)")
     except Exception as e:
