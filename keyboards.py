@@ -39,6 +39,52 @@ def get_developer_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
     )
     return builder.as_markup(resize_keyboard=True)
 
+def get_premium_management_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Creates an inline keyboard for premium management."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text=get_text('set_user_premium_button', lang), callback_data="set_premium"),
+        InlineKeyboardButton(text=get_text('remove_user_premium_button', lang), callback_data="remove_premium")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('check_user_info_button', lang), callback_data="check_user_info")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('premium_stats_button', lang), callback_data="premium_stats")
+    )
+    return builder.as_markup()
+
+def get_premium_duration_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Creates an inline keyboard for selecting premium duration."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text=get_text('premium_7_days', lang), callback_data="premium_days_7"),
+        InlineKeyboardButton(text=get_text('premium_30_days', lang), callback_data="premium_days_30")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('premium_90_days', lang), callback_data="premium_days_90"),
+        InlineKeyboardButton(text=get_text('premium_365_days', lang), callback_data="premium_days_365")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('premium_custom_days', lang), callback_data="premium_custom")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('back_button', lang), callback_data="back_to_premium_menu")
+    )
+    return builder.as_markup()
+
+def get_user_management_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Creates an inline keyboard for user management."""
+    builder = InlineKeyboardBuilder()
+    builder.row(
+        InlineKeyboardButton(text=get_text('search_user_button', lang), callback_data="search_user"),
+        InlineKeyboardButton(text=get_text('user_stats_button', lang), callback_data="user_stats")
+    )
+    builder.row(
+        InlineKeyboardButton(text=get_text('broadcast_to_all_button', lang), callback_data="broadcast_all")
+    )
+    return builder.as_markup()
+
 # --- Channel Management Keyboards ---
 
 def get_channels_menu_keyboard(lang: str) -> InlineKeyboardMarkup:

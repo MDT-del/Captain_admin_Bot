@@ -187,6 +187,105 @@ TEXTS = {
     'developer_premium_management_button': {
         'fa': "💎 مدیریت پریمیوم",
         'en': "💎 Premium Management"
+    },
+    # Premium Management Menu
+    'set_user_premium_button': {
+        'fa': "➕ پریمیوم کردن کاربر",
+        'en': "➕ Set User Premium"
+    },
+    'remove_user_premium_button': {
+        'fa': "➖ حذف پریمیوم کاربر",
+        'en': "➖ Remove User Premium"
+    },
+    'check_user_info_button': {
+        'fa': "👤 اطلاعات کاربر",
+        'en': "👤 User Information"
+    },
+    'premium_stats_button': {
+        'fa': "📊 آمار پریمیوم",
+        'en': "📊 Premium Statistics"
+    },
+    'search_user_button': {
+        'fa': "🔍 جستجوی کاربر",
+        'en': "🔍 Search User"
+    },
+    'user_stats_button': {
+        'fa': "📈 آمار کاربران",
+        'en': "📈 User Statistics"
+    },
+    'broadcast_to_all_button': {
+        'fa': "📢 پیام همگانی",
+        'en': "📢 Broadcast to All"
+    },
+    'back_button': {
+        'fa': "🔙 بازگشت",
+        'en': "🔙 Back"
+    },
+    # Premium Duration Options
+    'premium_7_days': {
+        'fa': "7️⃣ یک هفته",
+        'en': "7️⃣ 7 Days"
+    },
+    'premium_30_days': {
+        'fa': "3️⃣0️⃣ یک ماه",
+        'en': "3️⃣0️⃣ 30 Days"
+    },
+    'premium_90_days': {
+        'fa': "9️⃣0️⃣ سه ماه",
+        'en': "9️⃣0️⃣ 90 Days"
+    },
+    'premium_365_days': {
+        'fa': "🗓️ یک سال",
+        'en': "🗓️ 365 Days"
+    },
+    'premium_custom_days': {
+        'fa': "⚙️ تعداد روز دلخواه",
+        'en': "⚙️ Custom Days"
+    },
+    # Premium Management Messages
+    'premium_management_menu': {
+        'fa': "💎 منوی مدیریت پریمیوم\n\nلطفا یکی از گزینه‌های زیر را انتخاب کنید:",
+        'en': "💎 Premium Management Menu\n\nPlease select one of the options below:"
+    },
+    'enter_user_id_for_premium': {
+        'fa': "لطفا شناسه کاربری (User ID) کاربر مورد نظر را وارد کنید:",
+        'en': "Please enter the User ID of the target user:"
+    },
+    'select_premium_duration': {
+        'fa': "مدت زمان پریمیوم را انتخاب کنید:",
+        'en': "Select premium duration:"
+    },
+    'enter_custom_days': {
+        'fa': "تعداد روزهای پریمیوم را وارد کنید (عدد):",
+        'en': "Enter the number of premium days (number):"
+    },
+    'premium_set_success': {
+        'fa': "✅ کاربر {user_id} با موفقیت به مدت {days} روز پریمیوم شد.",
+        'en': "✅ User {user_id} has been set as premium for {days} days."
+    },
+    'premium_removed_success': {
+        'fa': "✅ پریمیوم کاربر {user_id} با موفقیت حذف شد.",
+        'en': "✅ Premium removed from user {user_id} successfully."
+    },
+    'user_not_found': {
+        'fa': "❌ کاربر یافت نشد.",
+        'en': "❌ User not found."
+    },
+    'invalid_user_id': {
+        'fa': "❌ شناسه کاربری نامعتبر است.",
+        'en': "❌ Invalid user ID."
+    },
+    'invalid_days_number': {
+        'fa': "❌ تعداد روزها نامعتبر است. لطفا یک عدد وارد کنید.",
+        'en': "❌ Invalid number of days. Please enter a number."
+    },
+    'premium_notification_granted': {
+        'fa': "🎉 تبریک! شما به پریمیوم ارتقا یافتید!\n\n✨ از این پس می‌توانید پست‌های نامحدود ارسال کنید.",
+        'en': "🎉 Congratulations! You've been upgraded to premium!\n\n✨ You can now send unlimited posts."
+    },
+    'premium_notification_removed': {
+        'fa': "📢 اشتراک پریمیوم شما به پایان رسید.\n\n🆓 شما دوباره به حساب رایگان بازگشتید.",
+        'en': "📢 Your premium subscription has ended.\n\n🆓 You're back to the free account."
     }
 }
 

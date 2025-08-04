@@ -17,3 +17,9 @@ class Form(StatesGroup):
     # Scheduling states
     selecting_schedule_date = State()
     selecting_schedule_time = State()
+    
+    # Premium management states
+    waiting_for_user_id_premium = State()
+    waiting_for_user_id_remove_premium = State()
+    waiting_for_user_id_info = State()
+    waiting_for_custom_days = State()

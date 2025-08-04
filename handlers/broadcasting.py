@@ -107,8 +107,6 @@ async def content_entry_handler(message: types.Message, state: FSMContext):
         return
     
     logging.info(f"Content received from user {user_id} for broadcasting")
-    
-
 
     # Check if user has registered channels
     if not await database.get_user_channels(user_id):
@@ -244,9 +242,9 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
         lang = await database.get_user_language(user_id) or 'en'
         
         # Debug log
-        logging.info(f"send_final_post called for user {user_id}, data: {data}")
+        logging.info(f"📤 send_final_post called for user {user_id}, data keys: {list(data.keys())}")
     except Exception as e:
-        logging.error(f"Error in send_final_post for user {user_id}: {e}")
+        logging.error(f"❌ Error in send_final_post for user {user_id}: {e}")
         return
 
     is_scheduled = data.get('is_scheduled', False)
@@ -260,38 +258,75 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
 
     if is_scheduled:
         scheduled_time_utc = data['scheduled_datetime_utc']
+        scheduled_jobs = 0
+        
+        logging.info(f"🕒 Scheduling posts for {len(target_channels)} channels at {scheduled_time_utc}")
+        
         for channel_id in target_channels:
-            job_id = str(uuid.uuid4())
-            scheduler.add_job(
-                send_scheduled_post,
-                trigger='date',
-                run_date=scheduled_time_utc,
-                args=[job_id, bot],
-                id=job_id,
-                misfire_grace_time=3600 # Allow to run up to 1h late
-            )
-            await database.add_scheduled_post(job_id, user_id, post_chat_id, post_message_id, channel_id, final_caption, scheduled_time_utc.isoformat())
+            try:
+                job_id = str(uuid.uuid4())
+                
+                # Add job to scheduler
+                scheduler.add_job(
+                    send_scheduled_post,
+                    trigger='date',
+                    run_date=scheduled_time_utc,
+                    args=[job_id, bot],
+                    id=job_id,
+                    misfire_grace_time=3600,  # Allow to run up to 1h late
+                    max_instances=1  # Prevent duplicate execution
+                )
+                
+                # Add to database
+                await database.add_scheduled_post(
+                    job_id, user_id, post_chat_id, post_message_id, 
+                    channel_id, final_caption, scheduled_time_utc.isoformat()
+                )
+                
+                scheduled_jobs += 1
+                logging.info(f"✅ Scheduled job {job_id} for channel {channel_id}")
+                
+            except Exception as e:
+                logging.error(f"❌ Failed to schedule job for channel {channel_id}: {e}")
 
-        jalali_time = jdatetime.datetime.fromgregorian(datetime=data['scheduled_datetime_utc'].astimezone(timezone('Asia/Tehran')))
-        await bot.send_message(user_id, get_text('schedule_success', lang).format(
-            date=jalali_time.strftime('%Y/%m/%d'), time=jalali_time.strftime('%H:%M')))
+        if scheduled_jobs > 0:
+            jalali_time = jdatetime.datetime.fromgregorian(
+                datetime=data['scheduled_datetime_utc'].astimezone(timezone('Asia/Tehran'))
+            )
+            success_msg = get_text('schedule_success', lang).format(
+                date=jalali_time.strftime('%Y/%m/%d'), 
+                time=jalali_time.strftime('%H:%M')
+            )
+            success_msg += f"\n📊 تعداد کانال‌های زمان‌بندی شده: {scheduled_jobs}" if lang == 'fa' else f"\n📊 Scheduled channels: {scheduled_jobs}"
+            await bot.send_message(user_id, success_msg)
+            logging.info(f"✅ Successfully scheduled {scheduled_jobs} posts for user {user_id}")
+        else:
+            error_msg = "❌ خطا در زمان‌بندی پست‌ها" if lang == 'fa' else "❌ Error scheduling posts"
+            await bot.send_message(user_id, error_msg)
+            logging.error(f"❌ Failed to schedule any posts for user {user_id}")
     else:
-        logging.info(f"Starting immediate broadcast for user {user_id} to {len(target_channels)} channels")
+        logging.info(f"🚀 Starting immediate broadcast for user {user_id} to {len(target_channels)} channels")
         sent_count = 0
         for channel_id in target_channels:
             try:
-                logging.info(f"Sending to channel {channel_id}")
-                await bot.copy_message(chat_id=channel_id, from_chat_id=post_chat_id, message_id=post_message_id, caption=final_caption or None, parse_mode="HTML")
+                logging.info(f"📤 Sending to channel {channel_id}")
+                await bot.copy_message(
+                    chat_id=channel_id, 
+                    from_chat_id=post_chat_id, 
+                    message_id=post_message_id, 
+                    caption=final_caption or None, 
+                    parse_mode="HTML"
+                )
                 sent_count += 1
-                logging.info(f"Successfully sent to channel {channel_id}")
+                logging.info(f"✅ Successfully sent to channel {channel_id}")
             except Exception as e:
-                logging.error(f"Failed to send to channel {channel_id}: {e}")
+                logging.error(f"❌ Failed to send to channel {channel_id}: {e}")
         
         # Increment user's post count for successful sends
         if sent_count > 0:
             await database.increment_user_post_count(user_id)
             
-        logging.info(f"Broadcast completed. Sent to {sent_count} channels")
+        logging.info(f"✅ Broadcast completed. Sent to {sent_count} channels")
         await bot.send_message(user_id, get_text('broadcast_success', lang).format(count=sent_count))
 
     await state.clear()
