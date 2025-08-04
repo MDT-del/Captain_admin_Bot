@@ -7,7 +7,7 @@ from apscheduler.schedulers.asyncio import AsyncIOScheduler
 
 from config import BOT_TOKEN
 import database
-from handlers import general, footer, channels, broadcasting, premium
+from handlers import general, footer, channels, broadcasting, premium, channel_premium
 from utils.scheduler import send_scheduled_post
 
 # Configure logging
@@ -33,6 +33,7 @@ async def main():
     dp.include_router(footer.router)
     dp.include_router(channels.router)
     dp.include_router(premium.router)
+    dp.include_router(channel_premium.router)  # New channel premium system
     dp.include_router(broadcasting.router)
 
     # Initialize the database

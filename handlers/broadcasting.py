@@ -49,7 +49,7 @@ async def process_schedule_time(message: types.Message, state: FSMContext, bot: 
         utc_dt = local_dt.astimezone(datetime.timezone.utc)
 
         if utc_dt < datetime.datetime.now(datetime.timezone.utc):
-             await message.answer("زمان انتخاب شده در گذشته است. لطفا زمان دیگری انتخاب کنید.")
+             await message.answer("زمان انت��اب شده در گذشته است. لطفا زمان دیگری انتخاب کنید.")
              return
 
         await state.update_data(scheduled_datetime_utc=utc_dt)
@@ -64,7 +64,7 @@ async def process_schedule_time(message: types.Message, state: FSMContext, bot: 
             await state.clear()
             return
 
-        # Convert channels to proper format
+        # Convert channels to proper format with premium status
         all_channels_info = []
         for channel in channels:
             try:
@@ -73,7 +73,17 @@ async def process_schedule_time(message: types.Message, state: FSMContext, bot: 
                 else:
                     channel_id = channel
                 chat = await bot.get_chat(channel_id)
-                all_channels_info.append({'id': channel_id, 'title': chat.title})
+                
+                # Check channel premium status and post count
+                is_premium = await database.is_channel_premium(channel_id, message.from_user.id)
+                posts_count = await database.get_channel_post_count_this_month(channel_id, message.from_user.id)
+                
+                all_channels_info.append({
+                    'id': channel_id, 
+                    'title': chat.title,
+                    'is_premium': is_premium,
+                    'posts_count': posts_count
+                })
             except Exception as e:
                 logging.error(f"Error getting chat info for channel {channel}: {e}")
 
@@ -86,34 +96,52 @@ async def process_schedule_time(message: types.Message, state: FSMContext, bot: 
         logging.error(f"Error processing schedule time: {e}")
         await message.answer("خطا در پردازش زمان. لطفا دوباره تلاش کنید.")
 
-# --- 2. Content Entry Point ---
+# --- 2. Content Entry Point - Accept ALL content types ---
 
-@router.message(F.content_type.in_({'text', 'photo', 'video', 'document', 'audio', 'voice'}))
+@router.message(~F.text.startswith('/'))  # Accept everything except commands
 async def content_entry_handler(message: types.Message, state: FSMContext):
     user_id = message.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
     
     current_state = await state.get_state()
-    logging.info(f"Content handler called for user {user_id}, state: {current_state}")
+    logging.info(f"📨 Content handler called for user {user_id}, state: {current_state}, content_type: {message.content_type}")
     
     # If user is waiting for caption, ignore this handler
     if current_state == Form.waiting_for_caption:
         logging.info(f"User {user_id} is waiting for caption, ignoring content handler")
         return
     
+    # If user is waiting for footer, ignore this handler
+    if current_state == Form.waiting_for_footer:
+        logging.info(f"User {user_id} is waiting for footer, ignoring content handler")
+        return
+        
+    # If user is waiting for schedule time, ignore this handler
+    if current_state == Form.selecting_schedule_time:
+        logging.info(f"User {user_id} is waiting for schedule time, ignoring content handler")
+        return
+        
+    # If user is in premium management states, ignore this handler
+    if current_state in [Form.waiting_for_user_id_premium, Form.waiting_for_user_id_remove_premium, 
+                        Form.waiting_for_user_id_info, Form.waiting_for_custom_days,
+                        Form.waiting_for_payment_receipt]:
+        logging.info(f"User {user_id} is in premium management state, ignoring content handler")
+        return
+        
     # If user is in any other state, ignore this handler  
     if current_state:
         logging.info(f"User {user_id} is in state {current_state}, ignoring content handler")
         return
     
-    logging.info(f"Content received from user {user_id} for broadcasting")
+    logging.info(f"📤 Content received from user {user_id} for broadcasting")
 
     # Check if user has registered channels
     if not await database.get_user_channels(user_id):
         await message.answer(get_text('error_no_channels_for_broadcast', lang))
         return
 
-    # Check post limit for non-premium users
+    # For now, we'll use the old user-based system as fallback
+    # The channel-based limits will be checked during actual sending
     can_send, remaining = await database.can_user_send_post(user_id)
     if not can_send:
         from config import FREE_USER_POST_LIMIT
@@ -128,7 +156,7 @@ async def content_entry_handler(message: types.Message, state: FSMContext):
 
     await message.answer(get_text('post_action_menu_title', lang), reply_markup=get_post_action_keyboard(lang))
 
-# --- 2. Broadcasting & Scheduling Workflow ---
+# --- 3. Broadcasting & Scheduling Workflow ---
 
 @router.callback_query(F.data == "cancel_broadcast")
 async def cancel_broadcast_handler(callback: types.CallbackQuery, state: FSMContext):
@@ -150,7 +178,7 @@ async def send_scheduled_handler(callback: types.CallbackQuery, state: FSMContex
         reply_markup=await create_persian_calendar()
     )
 
-# --- 3. Calendar Handlers ---
+# --- 4. Calendar Handlers ---
 
 @router.callback_query(F.data.startswith(f"{CALENDAR_CALLBACK_PREFIX}_"))
 async def calendar_process(callback: types.CallbackQuery, state: FSMContext):
@@ -178,14 +206,31 @@ async def calendar_process(callback: types.CallbackQuery, state: FSMContext):
         )
         await callback.answer()
 
-# --- 4. Channel and Caption Handlers ---
+# --- 5. Channel and Caption Handlers ---
 
 async def start_channel_selection(callback: types.CallbackQuery, state: FSMContext, bot: Bot):
     # This function is now a reusable entry point for channel selection
     user_id = callback.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
     db_channels = await database.get_user_channels(user_id)
-    all_channels_info = [{'id': c[0], 'title': (await bot.get_chat(c[0])).title} for c in db_channels]
+    
+    # Get channels with premium status and post counts
+    all_channels_info = []
+    for c in db_channels:
+        try:
+            channel_id = c[0]
+            chat = await bot.get_chat(channel_id)
+            is_premium = await database.is_channel_premium(channel_id, user_id)
+            posts_count = await database.get_channel_post_count_this_month(channel_id, user_id)
+            
+            all_channels_info.append({
+                'id': channel_id, 
+                'title': chat.title,
+                'is_premium': is_premium,
+                'posts_count': posts_count
+            })
+        except Exception as e:
+            logging.error(f"Error getting channel info: {e}")
 
     await state.update_data(all_channels=all_channels_info)
     await state.set_state(Form.selecting_channels)
@@ -207,10 +252,22 @@ async def select_channel_handler(callback: types.CallbackQuery, state: FSMContex
     lang = await database.get_user_language(callback.from_user.id) or 'en'
     data = await state.get_data()
     selected = data.get('selected_channels', [])
+    
+    # Check if channel can send posts (channel-based limit)
+    can_send, remaining = await database.can_channel_send_post(channel_id, callback.from_user.id)
+    
     if channel_id in selected:
         selected.remove(channel_id)
     else:
+        if not can_send:
+            from config import FREE_CHANNEL_POST_LIMIT
+            await callback.answer(
+                f"❌ این کانال به حد مجاز {FREE_CHANNEL_POST_LIMIT} پست رسیده است. برای ارسال نامحدود، کانال را پریمیوم کنید.",
+                show_alert=True
+            )
+            return
         selected.append(channel_id)
+    
     await state.update_data(selected_channels=selected)
     await callback.message.edit_reply_markup(reply_markup=get_channel_selection_keyboard(lang, data['all_channels'], selected))
 
@@ -234,7 +291,7 @@ async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContex
         await callback.message.edit_text("در حال پردازش...")
         await send_final_post(callback.from_user.id, state, bot, scheduler)
 
-# --- 5. Final Sending/Scheduling Logic ---
+# --- 6. Final Sending/Scheduling Logic ---
 
 async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: AsyncIOScheduler):
     try:
@@ -319,10 +376,17 @@ async def send_final_post(user_id: int, state: FSMContext, bot: Bot, scheduler: 
                 )
                 sent_count += 1
                 logging.info(f"✅ Successfully sent to channel {channel_id}")
+                
+                # Increment channel post count (channel-based system)
+                try:
+                    await database.increment_channel_post_count(channel_id, user_id)
+                except Exception as e:
+                    logging.error(f"Error incrementing channel post count for {channel_id}: {e}")
+                    
             except Exception as e:
                 logging.error(f"❌ Failed to send to channel {channel_id}: {e}")
         
-        # Increment user's post count for successful sends
+        # Also increment user's post count for backward compatibility
         if sent_count > 0:
             await database.increment_user_post_count(user_id)
             

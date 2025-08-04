@@ -16,7 +16,6 @@ TEXTS = {
         'fa': "تنظیم فوتر 📝",
         'en': "Set Footer 📝"
     },
-    # ... (previous texts are assumed to be here) ...
     'manage_channels_button': {
         'fa': "مدیریت کانال‌ها 📢",
         'en': "Manage Channels 📢"
@@ -33,7 +32,6 @@ TEXTS = {
         'fa': " لیست کانال‌های من",
         'en': " My Channels"
     },
-    # ... (other channel texts) ...
     'your_channels_list': {
         'fa': "لیست کانال‌های ثبت شده شما:",
         'en': "Your registered channels:"
@@ -146,7 +144,7 @@ TEXTS = {
         'en': "To upgrade to premium, contact the developer:"
     },
     'post_limit_reached': {
-        'fa': "❌ شما به حد مجاز ارسال پست رسیده‌اید!\n\n🆓 کاربران رایگان: {limit} پست در ماه\n💎 برای ارسال نامحدود، به پریمیوم ارتقا دهید.",
+        'fa': "❌ شما به حد مجاز ارسال پست رسیده‌اید!\n\n🆓 کاربران رایگان: {limit} پست در ماه\n�� برای ارسال نامحدود، به پریمیوم ارتقا دهید.",
         'en': "❌ You have reached your post limit!\n\n🆓 Free users: {limit} posts per month\n💎 Upgrade to premium for unlimited sending."
     },
     # Error messages
@@ -187,6 +185,10 @@ TEXTS = {
     'developer_premium_management_button': {
         'fa': "💎 مدیریت پریمیوم",
         'en': "💎 Premium Management"
+    },
+    'manage_payments_button': {
+        'fa': "💳 مدیریت پرداخت‌ها",
+        'en': "💳 Manage Payments"
     },
     # Premium Management Menu
     'set_user_premium_button': {
@@ -248,7 +250,7 @@ TEXTS = {
         'en': "💎 Premium Management Menu\n\nPlease select one of the options below:"
     },
     'enter_user_id_for_premium': {
-        'fa': "لطفا شناسه کاربری (User ID) کاربر مورد نظر را وارد کنید:",
+        'fa': "لطفا شناسه کاربری (User ID) کاربر مورد نظر ��ا وارد کنید:",
         'en': "Please enter the User ID of the target user:"
     },
     'select_premium_duration': {
@@ -284,8 +286,61 @@ TEXTS = {
         'en': "🎉 Congratulations! You've been upgraded to premium!\n\n✨ You can now send unlimited posts."
     },
     'premium_notification_removed': {
-        'fa': "📢 اشتراک پریمیوم شما به پایان رسید.\n\n🆓 شما دوباره به حساب رایگان بازگشتید.",
+        'fa': "📢 اشتراک پریمیوم شما به پایان رسید.\n\n🆓 شما دوباره به حسا�� رایگان بازگشتید.",
         'en': "📢 Your premium subscription has ended.\n\n🆓 You're back to the free account."
+    },
+    # Channel Premium System
+    'channel_premium_info': {
+        'fa': "💎 سیستم پریمیوم کانال محور\n\n🆓 هر کانال: 10 پست رایگان در ماه\n💎 کانال پریمیوم: ارسال نامحدود\n\n📊 وضعیت کانال‌های شما:",
+        'en': "💎 Channel-based Premium System\n\n🆓 Each channel: 10 free posts per month\n💎 Premium channel: Unlimited posts\n\n📊 Your channels status:"
+    },
+    'select_channel_for_premium': {
+        'fa': "لطفا کانالی که می‌خواهید پریمیوم کنید را انتخاب کنید:",
+        'en': "Please select the channel you want to upgrade to premium:"
+    },
+    'select_premium_duration_purchase': {
+        'fa': "مدت زمان پریمیوم را انتخاب کنید:",
+        'en': "Select premium duration:"
+    },
+    'payment_info': {
+        'fa': "💳 اطلاعات پرداخت\n\n🏦 شماره کارت: {card_number}\n👤 نام صاحب کارت: {card_holder}\n💰 مبلغ: {amount:,} تومان\n📅 مدت: {duration} ماه\n📺 کانال: {channel_title}\n\n📝 لطفا مبلغ را واریز کرده و عکس رسید را ارسال کنید.",
+        'en': "💳 Payment Information\n\n🏦 Card Number: {card_number}\n👤 Card Holder: {card_holder}\n💰 Amount: {amount:,} Toman\n📅 Duration: {duration} months\n📺 Channel: {channel_title}\n\n📝 Please transfer the amount and send the receipt photo."
+    },
+    'waiting_for_receipt': {
+        'fa': "📸 لطفا عکس رسید پرداخت را ارسال کنید:",
+        'en': "📸 Please send the payment receipt photo:"
+    },
+    'receipt_received': {
+        'fa': "✅ رسید شما دریافت شد و برای بررسی ارسال شد.\n\n⏳ لطفا منتظر تایید باشید. پس از تایید، کانال شما پریمیوم خواهد شد.",
+        'en': "✅ Your receipt has been received and sent for review.\n\n⏳ Please wait for approval. After approval, your channel will be premium."
+    },
+    'payment_approved': {
+        'fa': "🎉 پرداخت شما تایید شد!\n\n💎 کانال {channel_title} به مدت {duration} ماه پریمیوم شد.\n\n✨ حالا می‌توانید پست‌های نامحدود ارسال کنید!",
+        'en': "🎉 Your payment has been approved!\n\n💎 Channel {channel_title} is now premium for {duration} months.\n\n✨ You can now send unlimited posts!"
+    },
+    'payment_rejected': {
+        'fa': "❌ متأسفانه پرداخت شما تایید نشد.\n\n📞 لطفا با پشتیبانی تماس بگیرید.",
+        'en': "❌ Unfortunately, your payment was not approved.\n\n📞 Please contact support."
+    },
+    'payment_requests_title': {
+        'fa': "💳 درخواست‌های پرداخت",
+        'en': "💳 Payment Requests"
+    },
+    'payment_request_details': {
+        'fa': "💳 جزئیات درخواست پرداخت\n\n👤 کاربر: {user_id}\n📺 کانال: {channel_title}\n💰 مبلغ: {amount:,} تومان\n📅 مدت: {duration} ماه\n🕐 تاریخ: {date}\n\n📸 رسید پرداخت:",
+        'en': "💳 Payment Request Details\n\n👤 User: {user_id}\n📺 Channel: {channel_title}\n💰 Amount: {amount:,} Toman\n📅 Duration: {duration} months\n🕐 Date: {date}\n\n📸 Payment Receipt:"
+    },
+    'no_payment_requests': {
+        'fa': "هیچ درخواست پرداختی وجود ندارد.",
+        'en': "No payment requests available."
+    },
+    'channel_already_premium': {
+        'fa': "💎 این کانال در حال حاضر پریمیوم است!",
+        'en': "💎 This channel is already premium!"
+    },
+    'invalid_receipt': {
+        'fa': "❌ لطفا یک عکس معتبر از رسید پرداخت ارسال کنید.",
+        'en': "❌ Please send a valid payment receipt photo."
     }
 }
 

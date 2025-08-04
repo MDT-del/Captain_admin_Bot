@@ -33,6 +33,12 @@ async def send_scheduled_post(job_id: str, bot: Bot):
         # Increment user's post count for scheduled posts too
         await database.increment_user_post_count(user_id)
         
+        # Also increment channel post count (channel-based system)
+        try:
+            await database.increment_channel_post_count(target_channel_id, user_id)
+        except Exception as e:
+            logging.error(f"Error incrementing channel post count for scheduled post: {e}")
+        
         logging.info(f"✅ Successfully sent scheduled post from job {job_id} to channel {target_channel_id}")
         
         # Notify user about successful delivery

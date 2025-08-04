@@ -26,6 +26,7 @@ async def show_premium_info(message: types.Message):
         if is_premium or user_id == DEVELOPER_ID:
             # Premium user or developer
             text = get_text('premium_info_unlimited', lang).format(used=current_posts)
+            await message.answer(text)
         else:
             # Free user
             remaining = FREE_USER_POST_LIMIT - current_posts
@@ -38,17 +39,16 @@ async def show_premium_info(message: types.Message):
             # Add contact info for upgrade
             text += f"\n\n{get_text('contact_developer', lang)}"
             
-            # Create contact button
-            builder = InlineKeyboardBuilder()
-            if DEVELOPER_ID:
+            # Create contact button only if DEVELOPER_ID is set
+            if DEVELOPER_ID and DEVELOPER_ID != 0:
+                builder = InlineKeyboardBuilder()
                 builder.row(types.InlineKeyboardButton(
                     text="💬 تماس با توسعه‌دهنده" if lang == 'fa' else "💬 Contact Developer",
                     url=f"tg://user?id={DEVELOPER_ID}"
                 ))
                 await message.answer(text, reply_markup=builder.as_markup())
-                return
-        
-        await message.answer(text)
+            else:
+                await message.answer(text)
         
     except Exception as e:
         logging.error(f"Error showing premium info for user {user_id}: {e}")

@@ -33,6 +33,7 @@ def get_developer_menu_keyboard(lang: str) -> ReplyKeyboardMarkup:
         KeyboardButton(text=get_text('developer_manage_users_button', lang))
     )
     builder.row(KeyboardButton(text=get_text('developer_premium_management_button', lang)))
+    builder.row(KeyboardButton(text=get_text('manage_payments_button', lang)))
     builder.row(
         KeyboardButton(text=get_text('set_footer_button', lang)),
         KeyboardButton(text=get_text('manage_channels_button', lang))
@@ -147,4 +148,100 @@ def get_confirm_remove_keyboard(lang: str, channel_id: int) -> InlineKeyboardMar
         InlineKeyboardButton(text=get_text('no_cancel', lang), 
                            callback_data="cancel_remove")
     )
+    return builder.as_markup()
+
+# --- Channel Premium Keyboards ---
+
+def get_channel_premium_keyboard(lang: str, channels_info: List[Dict]) -> InlineKeyboardMarkup:
+    """Keyboard for selecting channel to upgrade to premium."""
+    builder = InlineKeyboardBuilder()
+    
+    for channel in channels_info:
+        channel_id = channel['channel_id']
+        title = channel['title']
+        is_premium = channel['is_premium']
+        posts_count = channel['posts_this_month']
+        
+        if is_premium:
+            text = f"💎 {title} (پریمیوم)"
+        else:
+            text = f"🆓 {title} ({posts_count}/10)"
+            
+        builder.row(InlineKeyboardButton(
+            text=text, 
+            callback_data=f"upgrade_channel_{channel_id}"
+        ))
+    
+    return builder.as_markup()
+
+def get_premium_duration_purchase_keyboard(lang: str) -> InlineKeyboardMarkup:
+    """Keyboard for selecting premium duration for purchase."""
+    builder = InlineKeyboardBuilder()
+    
+    builder.row(
+        InlineKeyboardButton(
+            text="💰 یک ماه - 100,000 تومان" if lang == 'fa' else "💰 1 Month - 100,000 T",
+            callback_data="buy_premium_1"
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text="💰 سه ماه - 280,000 تومان" if lang == 'fa' else "💰 3 Months - 280,000 T", 
+            callback_data="buy_premium_3"
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text=get_text('back_button', lang),
+            callback_data="back_to_channel_selection"
+        )
+    )
+    
+    return builder.as_markup()
+
+def get_payment_requests_keyboard(lang: str, requests: List[Dict]) -> InlineKeyboardMarkup:
+    """Keyboard for managing payment requests."""
+    builder = InlineKeyboardBuilder()
+    
+    for request in requests:
+        request_id = request['id']
+        user_id = request['user_id']
+        channel_title = request['channel_title']
+        amount = request['amount']
+        
+        text = f"💳 {channel_title} - {amount:,} تومان"
+        builder.row(InlineKeyboardButton(
+            text=text,
+            callback_data=f"view_payment_{request_id}"
+        ))
+    
+    if not requests:
+        builder.row(InlineKeyboardButton(
+            text="هیچ درخواست پرداختی وجود ندارد" if lang == 'fa' else "No payment requests",
+            callback_data="no_requests"
+        ))
+    
+    return builder.as_markup()
+
+def get_payment_approval_keyboard(lang: str, request_id: int) -> InlineKeyboardMarkup:
+    """Keyboard for approving/rejecting payment requests."""
+    builder = InlineKeyboardBuilder()
+    
+    builder.row(
+        InlineKeyboardButton(
+            text="✅ تایید" if lang == 'fa' else "✅ Approve",
+            callback_data=f"approve_payment_{request_id}"
+        ),
+        InlineKeyboardButton(
+            text="❌ رد" if lang == 'fa' else "❌ Reject", 
+            callback_data=f"reject_payment_{request_id}"
+        )
+    )
+    builder.row(
+        InlineKeyboardButton(
+            text=get_text('back_button', lang),
+            callback_data="back_to_payments"
+        )
+    )
+    
     return builder.as_markup()

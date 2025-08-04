@@ -23,3 +23,7 @@ class Form(StatesGroup):
     waiting_for_user_id_remove_premium = State()
     waiting_for_user_id_info = State()
     waiting_for_custom_days = State()
+    
+    # Channel premium purchase states
+    selecting_channel_for_premium = State()
+    waiting_for_payment_receipt = State()
