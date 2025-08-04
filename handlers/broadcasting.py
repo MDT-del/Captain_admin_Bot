@@ -176,10 +176,13 @@ async def confirm_channels_handler(callback: types.CallbackQuery, state: FSMCont
 async def caption_choice_handler(callback: types.CallbackQuery, state: FSMContext, scheduler: AsyncIOScheduler, bot: Bot):
     choice = callback.data.split("_")[2]
     lang = await database.get_user_language(callback.from_user.id) or 'en'
+    logging.info(f"Caption choice handler called for user {callback.from_user.id}, choice: {choice}")
     if choice == "yes":
         await state.set_state(Form.waiting_for_caption)
+        logging.info(f"State set to waiting_for_caption for user {callback.from_user.id}")
         await callback.message.edit_text(get_text('prompt_for_caption', lang))
     else:
+        logging.info(f"No caption selected, sending immediately for user {callback.from_user.id}")
         await callback.message.edit_text("در حال پردازش...")
         await send_final_post(callback.from_user.id, state, bot, scheduler)
 
