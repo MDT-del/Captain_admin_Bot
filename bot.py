@@ -28,12 +28,12 @@ async def main():
     # Pass scheduler to the dispatcher so it's available in handlers
     dp = Dispatcher(storage=storage, scheduler=scheduler)
 
-    # Include routers from handler modules (order matters!)
+    # Include routers from handler modules
     dp.include_router(general.router)
-    dp.include_router(broadcasting.router)  # Broadcasting must be before footer
     dp.include_router(footer.router)
     dp.include_router(channels.router)
     dp.include_router(premium.router)
+    dp.include_router(broadcasting.router)
 
     # Initialize the database
     await database.init_db()

@@ -29,6 +29,8 @@ async def content_entry_handler(message: types.Message, state: FSMContext):
         # User is in the middle of another process, ignore this message
         logging.info(f"Ignoring content from user {user_id} due to active state: {current_state}")
         return
+    
+
 
     # Check if user has registered channels
     if not await database.get_user_channels(user_id):

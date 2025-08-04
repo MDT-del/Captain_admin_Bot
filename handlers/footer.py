@@ -22,6 +22,8 @@ async def prompt_for_footer(message: types.Message, state: FSMContext):
 @router.message(Form.waiting_for_footer, F.text)
 async def process_footer_text(message: types.Message, state: FSMContext):
     """Receives the footer text, saves it to the DB, and clears the state."""
+    import logging
+    logging.info(f"Footer handler called for user {message.from_user.id}")
     user_id = message.from_user.id
     lang = await database.get_user_language(user_id) or 'en'
 
