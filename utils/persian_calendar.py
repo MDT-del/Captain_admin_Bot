@@ -41,7 +41,19 @@ async def create_persian_calendar(year: int = None, month: int = None) -> Inline
 
     # Calendar days
     month_start_day = jdatetime.date(year, month, 1).weekday()
-    days_in_month = jdatetime.date(year, month, 1).daysinmonth
+    
+    # Get days in month for Persian calendar
+    if month <= 6:
+        days_in_month = 31
+    elif month <= 11:
+        days_in_month = 30
+    else:  # month == 12 (Esfand)
+        # Check if it's a leap year by trying to create Feb 30th
+        try:
+            jdatetime.date(year, 12, 30)
+            days_in_month = 30
+        except ValueError:
+            days_in_month = 29
 
     # Add empty buttons for the first week's offset
     calendar_days = [InlineKeyboardButton(text=" ", callback_data=IGNORE_CALLBACK)] * month_start_day
