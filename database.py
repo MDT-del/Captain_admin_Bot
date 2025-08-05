@@ -1,8 +1,35 @@
 import aiosqlite
 import logging
 from typing import List, Tuple, Optional
+import jdatetime
+from datetime import datetime, timedelta
+from pytz import timezone
 
 DB_NAME = 'data/bot.db'
+
+def get_tehran_time():
+    """Get current time in Tehran timezone."""
+    tehran_tz = timezone('Asia/Tehran')
+    return datetime.now(tehran_tz)
+
+def format_persian_date(dt):
+    """Convert datetime to Persian date string."""
+    if isinstance(dt, str):
+        try:
+            dt = datetime.fromisoformat(dt.replace('Z', '+00:00'))
+        except:
+            return dt
+    
+    # Convert to Tehran timezone if needed
+    if dt.tzinfo is None:
+        tehran_tz = timezone('Asia/Tehran')
+        dt = tehran_tz.localize(dt)
+    elif dt.tzinfo != timezone('Asia/Tehran'):
+        dt = dt.astimezone(timezone('Asia/Tehran'))
+    
+    # Convert to Jalali
+    jalali_date = jdatetime.datetime.fromgregorian(datetime=dt)
+    return jalali_date.strftime('%Y/%m/%d %H:%M')
 
 async def init_db():
     """Initializes the database and creates tables if they don't exist."""
@@ -87,7 +114,9 @@ async def add_or_update_user(user_id: int, language_code: str):
         if await cursor.fetchone():
             await db.execute('UPDATE users SET language_code = ? WHERE user_id = ?', (language_code, user_id))
         else:
-            await db.execute('INSERT INTO users (user_id, language_code) VALUES (?, ?)', (user_id, language_code))
+            tehran_time = get_tehran_time()
+            await db.execute('INSERT INTO users (user_id, language_code, created_at) VALUES (?, ?, ?)', 
+                           (user_id, language_code, tehran_time.isoformat()))
             # Initialize user stats
             await db.execute('INSERT INTO user_stats (user_id) VALUES (?)', (user_id,))
         await db.commit()
@@ -118,11 +147,12 @@ async def is_channel_registered(channel_id: int, user_id: int) -> bool:
 async def add_channel(channel_id: int, user_id: int):
     async with aiosqlite.connect(DB_NAME) as db:
         await db.execute('INSERT INTO channels (channel_id, user_id) VALUES (?, ?)', (channel_id, user_id))
-        # Initialize channel premium record
+        # Initialize channel premium record with Tehran time
+        tehran_time = get_tehran_time()
         await db.execute('''
-            INSERT INTO channel_premium (channel_id, user_id) 
-            VALUES (?, ?)
-        ''', (channel_id, user_id))
+            INSERT INTO channel_premium (channel_id, user_id, created_at, last_reset_date) 
+            VALUES (?, ?, ?, ?)
+        ''', (channel_id, user_id, tehran_time.isoformat(), tehran_time.isoformat()))
         await db.commit()
 
 async def get_user_channels(user_id: int) -> List[Tuple[int]]:
@@ -156,10 +186,15 @@ async def is_channel_premium(channel_id: int, user_id: int) -> bool:
             return False
             
         if premium_until:
-            from datetime import datetime
             try:
                 premium_date = datetime.fromisoformat(premium_until)
-                return datetime.now() < premium_date
+                current_time = get_tehran_time()
+                # Remove timezone info for comparison
+                if premium_date.tzinfo:
+                    premium_date = premium_date.replace(tzinfo=None)
+                if current_time.tzinfo:
+                    current_time = current_time.replace(tzinfo=None)
+                return current_time < premium_date
             except:
                 return False
         return True
@@ -181,18 +216,18 @@ async def set_channel_premium(channel_id: int, user_id: int, premium_until: str 
             ''', (premium_until, channel_id, user_id))
         else:
             # Create new record
+            tehran_time = get_tehran_time()
             await db.execute('''
-                INSERT INTO channel_premium (channel_id, user_id, is_premium, premium_until)
-                VALUES (?, ?, 1, ?)
-            ''', (channel_id, user_id, premium_until))
+                INSERT INTO channel_premium (channel_id, user_id, is_premium, premium_until, created_at, last_reset_date)
+                VALUES (?, ?, 1, ?, ?, ?)
+            ''', (channel_id, user_id, premium_until, tehran_time.isoformat(), tehran_time.isoformat()))
         
         await db.commit()
         logging.info(f"Channel {channel_id} for user {user_id} set as premium until {premium_until}")
 
 async def get_channel_post_count_this_month(channel_id: int, user_id: int) -> int:
     """Gets channel's post count for current month."""
-    from datetime import datetime
-    current_month = datetime.now().strftime('%Y-%m')
+    current_month = get_tehran_time().strftime('%Y-%m')
     
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute('''
@@ -204,10 +239,11 @@ async def get_channel_post_count_this_month(channel_id: int, user_id: int) -> in
         
         if not row:
             # Initialize record for new channel
+            tehran_time = get_tehran_time()
             await db.execute('''
-                INSERT INTO channel_premium (channel_id, user_id) 
-                VALUES (?, ?)
-            ''', (channel_id, user_id))
+                INSERT INTO channel_premium (channel_id, user_id, created_at, last_reset_date) 
+                VALUES (?, ?, ?, ?)
+            ''', (channel_id, user_id, tehran_time.isoformat(), tehran_time.isoformat()))
             await db.commit()
             return 0
             
@@ -216,14 +252,16 @@ async def get_channel_post_count_this_month(channel_id: int, user_id: int) -> in
         # Check if we need to reset monthly count
         if last_reset:
             try:
-                last_reset_month = datetime.fromisoformat(last_reset).strftime('%Y-%m')
+                last_reset_dt = datetime.fromisoformat(last_reset)
+                last_reset_month = last_reset_dt.strftime('%Y-%m')
                 if last_reset_month != current_month:
                     # Reset monthly count
+                    tehran_time = get_tehran_time()
                     await db.execute('''
                         UPDATE channel_premium 
-                        SET posts_sent_this_month = 0, last_reset_date = CURRENT_TIMESTAMP 
+                        SET posts_sent_this_month = 0, last_reset_date = ? 
                         WHERE channel_id = ? AND user_id = ?
-                    ''', (channel_id, user_id))
+                    ''', (tehran_time.isoformat(), channel_id, user_id))
                     await db.commit()
                     return 0
             except:
@@ -276,10 +314,15 @@ async def get_user_channels_with_premium_status(user_id: int) -> List[dict]:
             # Check if premium is still valid
             is_premium_active = False
             if is_premium and premium_until:
-                from datetime import datetime
                 try:
                     premium_date = datetime.fromisoformat(premium_until)
-                    is_premium_active = datetime.now() < premium_date
+                    current_time = get_tehran_time()
+                    # Remove timezone info for comparison
+                    if premium_date.tzinfo:
+                        premium_date = premium_date.replace(tzinfo=None)
+                    if current_time.tzinfo:
+                        current_time = current_time.replace(tzinfo=None)
+                    is_premium_active = current_time < premium_date
                 except:
                     pass
             
@@ -296,10 +339,11 @@ async def get_user_channels_with_premium_status(user_id: int) -> List[dict]:
 async def create_payment_request(user_id: int, channel_id: int, channel_title: str, duration_months: int, amount: int) -> int:
     """Creates a new payment request and returns the request ID."""
     async with aiosqlite.connect(DB_NAME) as db:
+        tehran_time = get_tehran_time()
         cursor = await db.execute('''
-            INSERT INTO payment_requests (user_id, channel_id, channel_title, duration_months, amount)
-            VALUES (?, ?, ?, ?, ?)
-        ''', (user_id, channel_id, channel_title, duration_months, amount))
+            INSERT INTO payment_requests (user_id, channel_id, channel_title, duration_months, amount, created_at)
+            VALUES (?, ?, ?, ?, ?, ?)
+        ''', (user_id, channel_id, channel_title, duration_months, amount, tehran_time.isoformat()))
         await db.commit()
         return cursor.lastrowid
 
@@ -361,6 +405,35 @@ async def get_pending_payment_requests() -> List[dict]:
         
         return requests
 
+async def get_all_payment_requests() -> List[dict]:
+    """Gets all payment requests (for management)."""
+    async with aiosqlite.connect(DB_NAME) as db:
+        cursor = await db.execute('''
+            SELECT pr.*, cp.premium_until 
+            FROM payment_requests pr
+            LEFT JOIN channel_premium cp ON pr.channel_id = cp.channel_id AND pr.user_id = cp.user_id
+            ORDER BY pr.created_at DESC
+        ''', )
+        rows = await cursor.fetchall()
+        
+        requests = []
+        for row in rows:
+            requests.append({
+                'id': row[0],
+                'user_id': row[1],
+                'channel_id': row[2],
+                'channel_title': row[3],
+                'duration_months': row[4],
+                'amount': row[5],
+                'status': row[6],
+                'receipt_message_id': row[7],
+                'created_at': row[8],
+                'processed_at': row[9],
+                'premium_until': row[10] if len(row) > 10 else None
+            })
+        
+        return requests
+
 async def approve_payment_request(request_id: int):
     """Approves a payment request and sets channel as premium."""
     async with aiosqlite.connect(DB_NAME) as db:
@@ -373,19 +446,19 @@ async def approve_payment_request(request_id: int):
         
         user_id, channel_id, duration_months = row[1], row[2], row[4]
         
-        # Calculate premium end date
-        from datetime import datetime, timedelta
-        premium_until = (datetime.now() + timedelta(days=duration_months * 30)).isoformat()
+        # Calculate premium end date (Tehran timezone)
+        tehran_time = get_tehran_time()
+        premium_until_tehran = tehran_time + timedelta(days=duration_months * 30)
         
         # Set channel as premium
-        await set_channel_premium(channel_id, user_id, premium_until)
+        await set_channel_premium(channel_id, user_id, premium_until_tehran.isoformat())
         
-        # Update request status
+        # Update request status with Tehran time
         await db.execute('''
             UPDATE payment_requests 
-            SET status = 'approved', processed_at = CURRENT_TIMESTAMP 
+            SET status = 'approved', processed_at = ? 
             WHERE id = ?
-        ''', (request_id,))
+        ''', (tehran_time.isoformat(), request_id))
         
         await db.commit()
         return True
@@ -393,11 +466,12 @@ async def approve_payment_request(request_id: int):
 async def reject_payment_request(request_id: int):
     """Rejects a payment request."""
     async with aiosqlite.connect(DB_NAME) as db:
+        tehran_time = get_tehran_time()
         await db.execute('''
             UPDATE payment_requests 
-            SET status = 'rejected', processed_at = CURRENT_TIMESTAMP 
+            SET status = 'rejected', processed_at = ? 
             WHERE id = ?
-        ''', (request_id,))
+        ''', (tehran_time.isoformat(), request_id))
         await db.commit()
 
 # --- Scheduled Post Functions ---
@@ -438,10 +512,15 @@ async def is_user_premium(user_id: int) -> bool:
             return False
             
         if premium_until:
-            from datetime import datetime
             try:
                 premium_date = datetime.fromisoformat(premium_until)
-                return datetime.now() < premium_date
+                current_time = get_tehran_time()
+                # Remove timezone info for comparison
+                if premium_date.tzinfo:
+                    premium_date = premium_date.replace(tzinfo=None)
+                if current_time.tzinfo:
+                    current_time = current_time.replace(tzinfo=None)
+                return current_time < premium_date
             except:
                 return False
         return True
@@ -456,8 +535,7 @@ async def set_user_premium(user_id: int, premium_until: str = None):
 
 async def get_user_post_count_this_month(user_id: int) -> int:
     """Gets user's post count for current month."""
-    from datetime import datetime
-    current_month = datetime.now().strftime('%Y-%m')
+    current_month = get_tehran_time().strftime('%Y-%m')
     
     async with aiosqlite.connect(DB_NAME) as db:
         cursor = await db.execute('''
@@ -476,13 +554,15 @@ async def get_user_post_count_this_month(user_id: int) -> int:
         # Check if we need to reset monthly count
         if last_reset:
             try:
-                last_reset_month = datetime.fromisoformat(last_reset).strftime('%Y-%m')
+                last_reset_dt = datetime.fromisoformat(last_reset)
+                last_reset_month = last_reset_dt.strftime('%Y-%m')
                 if last_reset_month != current_month:
                     # Reset monthly count
+                    tehran_time = get_tehran_time()
                     await db.execute('''
-                        UPDATE user_stats SET posts_sent_this_month = 0, last_reset_date = CURRENT_TIMESTAMP 
+                        UPDATE user_stats SET posts_sent_this_month = 0, last_reset_date = ? 
                         WHERE user_id = ?
-                    ''', (user_id,))
+                    ''', (tehran_time.isoformat(), user_id))
                     await db.commit()
                     return 0
             except:

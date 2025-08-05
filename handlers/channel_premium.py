@@ -1,6 +1,7 @@
 import logging
 from aiogram import Router, F, types, Bot
 from aiogram.fsm.context import FSMContext
+from datetime import timedelta
 
 import database
 from texts import get_text
@@ -193,14 +194,18 @@ async def send_receipt_to_developer(bot: Bot, payment_request: dict, receipt_mes
         if not DEVELOPER_ID or DEVELOPER_ID == 0:
             return
         
-        # Format payment details with channel identifier
-        details_text = get_text('payment_request_details', 'fa').format(
-            user_id=payment_request['user_id'],
-            channel_title=payment_request['channel_title'],  # This now includes username/ID
-            amount=payment_request['amount'],
-            duration=payment_request['duration_months'],
-            date=payment_request['created_at']
-        )
+        # Format payment details with Persian date
+        created_persian = database.format_persian_date(payment_request['created_at'])
+        
+        details_text = f"""💳 درخواست پرداخت جدید
+
+👤 کاربر: {payment_request['user_id']}
+📺 کانال: {payment_request['channel_title']}
+💰 مبلغ: {payment_request['amount']:,} تومان
+📅 مدت: {payment_request['duration_months']} ماه
+🕐 تاریخ درخواست: {created_persian}
+
+📸 رسید پرداخت:"""
         
         # Send details
         await bot.send_message(DEVELOPER_ID, details_text)
@@ -264,13 +269,18 @@ async def view_payment_details(callback: types.CallbackQuery):
             await callback.answer("❌ درخواست یافت نشد", show_alert=True)
             return
         
-        details_text = get_text('payment_request_details', 'fa').format(
-            user_id=payment_request['user_id'],
-            channel_title=payment_request['channel_title'],
-            amount=payment_request['amount'],
-            duration=payment_request['duration_months'],
-            date=payment_request['created_at']
-        )
+        # Format with Persian date
+        created_persian = database.format_persian_date(payment_request['created_at'])
+        
+        details_text = f"""💳 جزئیات درخواست پرداخت
+
+👤 کاربر: {payment_request['user_id']}
+📺 کانال: {payment_request['channel_title']}
+💰 مبلغ: {payment_request['amount']:,} تومان
+📅 مدت: {payment_request['duration_months']} ماه
+🕐 تاریخ: {created_persian}
+
+📸 رسید پرداخت ارسال شده است."""
         
         await callback.message.edit_text(
             details_text,
@@ -300,14 +310,16 @@ async def approve_payment(callback: types.CallbackQuery, bot: Bot):
         success = await database.approve_payment_request(request_id)
         
         if success:
-            await callback.message.edit_text("✅ پرداخت تایید شد و کانال پریمیوم شد.")
+            # Calculate expiry date for display
+            tehran_time = database.get_tehran_time()
+            expiry_date = tehran_time + timedelta(days=payment_request['duration_months'] * 30)
+            expiry_persian = database.format_persian_date(expiry_date)
             
-            # Notify user
+            await callback.message.edit_text(f"✅ پرداخت تایید شد و کانال پریمیوم شد.\n📅 انقضا: {expiry_persian}")
+            
+            # Notify user with Persian expiry date
             user_lang = await database.get_user_language(payment_request['user_id']) or 'en'
-            notification = get_text('payment_approved', user_lang).format(
-                channel_title=payment_request['channel_title'],
-                duration=payment_request['duration_months']
-            )
+            notification = f"🎉 پرداخت شما تایید شد!\n\n💎 کانال {payment_request['channel_title']} به مدت {payment_request['duration_months']} ماه پریمیوم شد.\n📅 انقضا: {expiry_persian}\n\n✨ حالا می‌توانید پست‌های نامحدود ارسال کنید!"
             
             try:
                 await bot.send_message(payment_request['user_id'], notification)

@@ -22,7 +22,7 @@ FREE_CHANNEL_POST_LIMIT = 10  # Posts per month for free channels
 
 # Payment settings
 PAYMENT_CARD_NUMBER = os.getenv("PAYMENT_CARD_NUMBER", "6104-3375-4131-2433")  # شماره کارت توسعه‌دهنده
-PAYMENT_CARD_HOLDER = os.getenv("PAYMENT_CARD_HOLDER", "مجید طیبی بانک ملت")  # نام صاحب کارت
+PAYMENT_CARD_HOLDER = os.getenv("PAYMENT_CARD_HOLDER", "مجید طیبی، بانک ملت")  # نام صاحب کارت
 PAYMENT_PRICES = {
     1: 100000,   # 1 month = 100,000 Toman
     3: 280000,   # 3 months = 280,000 Toman

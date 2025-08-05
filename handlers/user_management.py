@@ -45,15 +45,15 @@ async def user_stats_handler(callback: types.CallbackQuery):
             ''')
             stats = await cursor.fetchone()
             
-            # Get channel statistics
+            # Get channel statistics with proper premium check
             cursor = await db.execute('''
                 SELECT 
                     COUNT(*) as total_channels,
-                    COUNT(CASE WHEN cp.is_premium = 1 THEN 1 END) as premium_channels,
+                    COUNT(CASE WHEN cp.is_premium = 1 AND cp.premium_until > ? THEN 1 END) as premium_channels,
                     AVG(cp.posts_sent_this_month) as avg_channel_posts
                 FROM channels c
                 LEFT JOIN channel_premium cp ON c.channel_id = cp.channel_id AND c.user_id = cp.user_id
-            ''')
+            ''', (database.get_tehran_time().isoformat(),))
             channel_stats = await cursor.fetchone()
             
             # Get recent activity
@@ -206,7 +206,7 @@ async def confirm_broadcast(callback: types.CallbackQuery, state: FSMContext, bo
         
         result_text = f"""✅ ارسال پیام همگانی تکمیل شد
 
-📊 نتای��:
+📊 نتایج:
 ├── ارسال موفق: {sent_count}
 ├── ارسال ناموفق: {failed_count}
 └── کل: {sent_count + failed_count}
@@ -262,7 +262,7 @@ async def show_top_users(message: types.Message):
                 text += f"{emoji} کاربر {user_id}\n"
                 text += f"   📊 کل پست‌ها: {total_posts or 0}\n"
                 text += f"   📅 این ماه: {month_posts or 0}\n"
-                text += f"   🌐 زبان: {lang or 'نامشخص'}\n\n"
+                text += f"   🌐 زب��ن: {lang or 'نامشخص'}\n\n"
             
             await message.answer(text)
             
@@ -295,8 +295,10 @@ async def show_active_users(message: types.Message):
             
             for user in active_users:
                 user_id, lang, created_at, month_posts = user
+                # Format date to Persian
+                created_persian = database.format_persian_date(created_at) if created_at else 'نامشخص'
                 text += f"👤 کاربر {user_id}\n"
-                text += f"   📅 عضویت: {created_at or 'نامشخص'}\n"
+                text += f"   📅 عضویت: {created_persian}\n"
                 text += f"   📊 پست‌های ماه: {month_posts or 0}\n"
                 text += f"   🌐 زبان: {lang or 'نامشخص'}\n\n"
             
@@ -304,4 +306,45 @@ async def show_active_users(message: types.Message):
             
     except Exception as e:
         logging.error(f"Error showing active users: {e}")
+        await message.answer(f"❌ خطا: {e}")
+
+@router.message(F.from_user.id == DEVELOPER_ID, F.text.startswith("/premiumchannels"))
+async def show_premium_channels(message: types.Message):
+    """Show all premium channels with expiry dates."""
+    try:
+        import aiosqlite
+        async with aiosqlite.connect(database.DB_NAME) as db:
+            # Get premium channels
+            cursor = await db.execute('''
+                SELECT cp.channel_id, cp.user_id, cp.premium_until, cp.created_at
+                FROM channel_premium cp
+                WHERE cp.is_premium = 1 AND cp.premium_until > ?
+                ORDER BY cp.premium_until ASC
+            ''', (database.get_tehran_time().isoformat(),))
+            premium_channels = await cursor.fetchall()
+            
+            if not premium_channels:
+                await message.answer("📊 هیچ کانال پریمیومی یافت نشد.")
+                return
+            
+            text = "💎 کانال‌های پریمیوم:\n\n"
+            
+            for channel in premium_channels:
+                channel_id, user_id, premium_until, created_at = channel
+                
+                # Format dates to Persian
+                expiry_persian = database.format_persian_date(premium_until) if premium_until else 'نامشخص'
+                created_persian = database.format_persian_date(created_at) if created_at else 'نامشخص'
+                
+                text += f"📢 کانال {channel_id}\n"
+                text += f"   👤 کاربر: {user_id}\n"
+                text += f"   📅 ثبت: {created_persian}\n"
+                text += f"   ⏰ انقضا: {expiry_persian}\n\n"
+            
+            text += f"📊 کل کانال‌های پریمیوم: {len(premium_channels)}"
+            
+            await message.answer(text)
+            
+    except Exception as e:
+        logging.error(f"Error showing premium channels: {e}")
         await message.answer(f"❌ خطا: {e}")
