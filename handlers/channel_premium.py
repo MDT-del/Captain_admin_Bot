@@ -31,14 +31,20 @@ async def show_channel_premium_info(message: types.Message, bot: Bot):
             await message.answer(get_text('error_no_channels_for_broadcast', lang))
             return
         
-        # Add channel titles
+        # Add channel titles and usernames
         for channel_info in channels_info:
             try:
                 chat = await bot.get_chat(channel_info['channel_id'])
                 channel_info['title'] = chat.title
+                # Add username if available
+                if hasattr(chat, 'username') and chat.username:
+                    channel_info['username'] = f"@{chat.username}"
+                else:
+                    channel_info['username'] = f"ID: {channel_info['channel_id']}"
             except Exception as e:
                 logging.error(f"Error getting chat info: {e}")
                 channel_info['title'] = f"کانال {channel_info['channel_id']}"
+                channel_info['username'] = f"ID: {channel_info['channel_id']}"
         
         text = get_text('channel_premium_info', lang)
         await message.answer(
@@ -64,14 +70,19 @@ async def select_channel_for_premium(callback: types.CallbackQuery, state: FSMCo
             await callback.answer(get_text('channel_already_premium', lang), show_alert=True)
             return
         
-        # Get channel info
+        # Get channel info with username
         chat = await bot.get_chat(channel_id)
         channel_title = chat.title
+        if hasattr(chat, 'username') and chat.username:
+            channel_identifier = f"@{chat.username}"
+        else:
+            channel_identifier = f"ID: {channel_id}"
         
         # Store channel info in state
         await state.update_data(
             selected_channel_id=channel_id,
-            selected_channel_title=channel_title
+            selected_channel_title=channel_title,
+            selected_channel_identifier=channel_identifier
         )
         
         await callback.message.edit_text(
@@ -100,27 +111,28 @@ async def process_premium_purchase(callback: types.CallbackQuery, state: FSMCont
         data = await state.get_data()
         channel_id = data.get('selected_channel_id')
         channel_title = data.get('selected_channel_title')
+        channel_identifier = data.get('selected_channel_identifier', f"ID: {channel_id}")
         
         if not channel_id:
             await callback.answer("❌ خطا در انتخاب کانال", show_alert=True)
             return
         
-        # Create payment request
+        # Create payment request with channel identifier
         request_id = await database.create_payment_request(
-            user_id, channel_id, channel_title, duration_months, amount
+            user_id, channel_id, f"{channel_title} ({channel_identifier})", duration_months, amount
         )
         
         # Store request ID in state
         await state.update_data(payment_request_id=request_id)
         await state.set_state(Form.waiting_for_payment_receipt)
         
-        # Send payment info
+        # Send payment info with channel identifier
         payment_text = get_text('payment_info', lang).format(
             card_number=PAYMENT_CARD_NUMBER,
             card_holder=PAYMENT_CARD_HOLDER,
             amount=amount,
             duration=duration_months,
-            channel_title=channel_title
+            channel_title=f"{channel_title} ({channel_identifier})"
         )
         
         await callback.message.edit_text(payment_text)
@@ -181,10 +193,10 @@ async def send_receipt_to_developer(bot: Bot, payment_request: dict, receipt_mes
         if not DEVELOPER_ID or DEVELOPER_ID == 0:
             return
         
-        # Format payment details
+        # Format payment details with channel identifier
         details_text = get_text('payment_request_details', 'fa').format(
             user_id=payment_request['user_id'],
-            channel_title=payment_request['channel_title'],
+            channel_title=payment_request['channel_title'],  # This now includes username/ID
             amount=payment_request['amount'],
             duration=payment_request['duration_months'],
             date=payment_request['created_at']

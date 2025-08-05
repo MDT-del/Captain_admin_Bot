@@ -159,13 +159,14 @@ def get_channel_premium_keyboard(lang: str, channels_info: List[Dict]) -> Inline
     for channel in channels_info:
         channel_id = channel['channel_id']
         title = channel['title']
+        username = channel.get('username', f"ID: {channel_id}")
         is_premium = channel['is_premium']
         posts_count = channel['posts_this_month']
         
         if is_premium:
-            text = f"💎 {title} (پریمیوم)"
+            text = f"💎 {title}\n{username} (پریمیوم)"
         else:
-            text = f"🆓 {title} ({posts_count}/10)"
+            text = f"🆓 {title}\n{username} ({posts_count}/10)"
             
         builder.row(InlineKeyboardButton(
             text=text, 

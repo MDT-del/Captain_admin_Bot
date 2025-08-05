@@ -27,3 +27,6 @@ class Form(StatesGroup):
     # Channel premium purchase states
     selecting_channel_for_premium = State()
     waiting_for_payment_receipt = State()
+    
+    # Broadcast states
+    waiting_for_broadcast_message = State()

@@ -12,48 +12,8 @@ from config import FREE_USER_POST_LIMIT, DEVELOPER_ID
 # All handlers for this module are registered on a separate router
 router = Router()
 
-
-@router.message(F.text.in_([get_text('upgrade_premium_button', 'fa'), get_text('upgrade_premium_button', 'en')]))
-async def show_premium_info(message: types.Message):
-    """Shows premium information and upgrade options."""
-    user_id = message.from_user.id
-    lang = await database.get_user_language(user_id) or 'en'
-    
-    try:
-        is_premium = await database.is_user_premium(user_id)
-        current_posts = await database.get_user_post_count_this_month(user_id)
-        
-        if is_premium or user_id == DEVELOPER_ID:
-            # Premium user or developer
-            text = get_text('premium_info_unlimited', lang).format(used=current_posts)
-            await message.answer(text)
-        else:
-            # Free user
-            remaining = FREE_USER_POST_LIMIT - current_posts
-            text = get_text('premium_info', lang).format(
-                limit=FREE_USER_POST_LIMIT,
-                used=current_posts,
-                remaining=max(0, remaining)
-            )
-            
-            # Add contact info for upgrade
-            text += f"\n\n{get_text('contact_developer', lang)}"
-            
-            # Create contact button only if DEVELOPER_ID is set
-            if DEVELOPER_ID and DEVELOPER_ID != 0:
-                builder = InlineKeyboardBuilder()
-                builder.row(types.InlineKeyboardButton(
-                    text="💬 تماس با توسعه‌دهنده" if lang == 'fa' else "💬 Contact Developer",
-                    url=f"tg://user?id={DEVELOPER_ID}"
-                ))
-                await message.answer(text, reply_markup=builder.as_markup())
-            else:
-                await message.answer(text)
-        
-    except Exception as e:
-        logging.error(f"Error showing premium info for user {user_id}: {e}")
-        await message.answer(get_text('error_occurred', lang))
-
+# NOTE: The "upgrade_premium_button" handler is now in channel_premium.py
+# This file only handles developer premium management functions
 
 # --- Developer Premium Management Menu ---
 
@@ -445,7 +405,7 @@ async def show_stats_command(message: types.Message):
             result = await cursor.fetchone()
             posts_this_month = result[0] if result[0] else 0
             
-        stats_text = f"""📊 آمار کامل ربات:
+        stats_text = f"""📊 ��مار کامل ربات:
 
 👥 کل کاربران: {total_users}
 💎 کاربران پریمیوم: {premium_users}
